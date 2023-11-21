@@ -1,13 +1,20 @@
 import { Lemma, LemmaResource, PrismaClient } from '@prisma/client';
-import { parseLexicon } from './parse-lexicon';
-
+import './shared-types';
 const client = new PrismaClient();
 
-export const importLexicon = async (
-  resourceCode: 'BDB' | 'LSJ',
-  filename: string,
-  definitionField: string
-) => {
+type ImportLexiconParametersType = {
+  resourceCode: 'BDB' | 'LSJ';
+  filename: string;
+  definitionField: string;
+  parseLexicon: ParseLexiconFunctionType;
+};
+
+export const importLexicon = async ({
+  resourceCode,
+  filename,
+  definitionField,
+  parseLexicon,
+}: ImportLexiconParametersType) => {
   console.log(`Importing ${resourceCode} definitions...`);
   const parsed = await parseLexicon(filename, [definitionField]);
   console.log(`Parsed ${Object.keys(parsed).length} words`);
