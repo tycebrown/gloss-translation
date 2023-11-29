@@ -11,6 +11,8 @@ export default createRoute<{ code: string; wordId: string }>()
       state: z
         .enum(Object.values(GlossState) as [GlossState, ...GlossState[]])
         .optional(),
+      lastUpdatedAt: z.string().datetime().optional(),
+      lastUpdatedById: z.string().optional(),
     }),
     authorize: authorize((req) => ({
       action: 'translate',
@@ -29,7 +31,12 @@ export default createRoute<{ code: string; wordId: string }>()
         return;
       }
 
-      const fields: { gloss?: string; state?: PrismaTypes.GlossState } = {};
+      const fields: {
+        gloss?: string;
+        state?: PrismaTypes.GlossState;
+        lastUpdatedAt?: string;
+        lastUpdatedById?: string;
+      } = {};
 
       if (typeof req.body.state !== 'undefined') {
         fields.state = req.body.state;
@@ -41,6 +48,12 @@ export default createRoute<{ code: string; wordId: string }>()
         if (!fields.gloss) {
           fields.state = GlossState.Unapproved;
         }
+      }
+      if (typeof req.body.lastUpdatedAt !== 'undefined') {
+        fields.lastUpdatedAt = req.body.lastUpdatedAt;
+      }
+      if (typeof req.body.lastUpdatedById !== 'undefined') {
+        fields.lastUpdatedById = req.body.lastUpdatedById;
       }
 
       await client.gloss.upsert({

@@ -268,13 +268,13 @@ model Gloss {
   /// The approval state of the gloss.
   state           GlossState @default(UNAPPROVED)
   /// The timestamp that this gloss was created
-  createdAt       DateTime
+  createdAt       DateTime   @default(now())
   /// The timestamp that this gloss was last updated
-  lastUpdatedAt   DateTime
+  lastUpdatedAt   DateTime   @default(now())
   /// The user who last updated this gloss
-  lastUpdatedBy   AuthUser   @relation(fields: [lastUpdatedById], references: [id])
+  lastUpdatedBy   AuthUser?  @relation(fields: [lastUpdatedById], references: [id])
   /// The ID of the user who last updated this gloss
-  lastUpdatedById String     @db.Uuid
+  lastUpdatedById String?    @db.Uuid
 
   @@id([wordId, languageId])
 }
