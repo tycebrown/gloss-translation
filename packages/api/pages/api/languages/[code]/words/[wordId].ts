@@ -56,6 +56,8 @@ export default createRoute<{ code: string; wordId: string }>()
         fields.lastUpdatedById = req.body.lastUpdatedById;
       }
 
+      const now = new Date().toISOString();
+
       await client.gloss.upsert({
         where: {
           wordId_languageId: {
@@ -66,6 +68,9 @@ export default createRoute<{ code: string; wordId: string }>()
         update: fields,
         create: {
           ...fields,
+          // the following two lines are so that createdAt and lastUpdatedAt are the same time for initial creation of the gloss
+          createdAt: now,
+          lastUpdatedAt: now,
           wordId: req.query.wordId,
           languageId: language.id,
         },
