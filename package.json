@@ -27,7 +27,9 @@
     "react-dom": "18.2.0",
     "react-router-dom": "6.11.2",
     "swagger-ui-react": "4.18.1",
-    "tslib": "2.3.0"
+    "tslib": "2.3.0",
+    "usfm-grammar": "^2.3.1",
+    "usfm-js": "^3.4.2"
   },
   "devDependencies": {
     "@babel/core": "7.14.5",
