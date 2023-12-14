@@ -10,7 +10,8 @@ const usfm = require('usfm-js');
 const client = new PrismaClient();
 
 const STRONGS_REGEX = / \[e\]/;
-// TODO: compress adjacent (with same storngs), make sure to use sheldon hebrew text.
+// TODO: compress adjacent (with same strongs), make sure to use sheldon hebrew text.
+//  - do the ktiv-qere situation
 async function run() {
   await client.gloss.deleteMany();
   await client.word.deleteMany();
@@ -44,33 +45,13 @@ async function run() {
 
     const sheldonData = morphologyData[bookKey].map((value) =>
       value.map((value) =>
-        value
-          .filter(
-            ([text, , english, grammar]) =>
-              !(english === ' - ' && grammar === undefined) && !(text === 'ס')
-          )
-          .filter(([text], index, words) => {
-            if (text.startsWith('[') && text.endsWith(']')) {
-              if (
-                words[index - 1] &&
-                words[index - 1][0].startsWith('(') &&
-                words[index - 1][0].endsWith(')')
-              ) {
-                return true;
-              } else if (
-                words[index + 1] &&
-                words[index + 1][0].startsWith('(') &&
-                words[index + 1][0].endsWith(')')
-              ) {
-                return true;
-              }
-              return false;
-            }
-            return true;
-          })
-          .filter(([text]) => {
-            return !(text.startsWith('(') && text.endsWith(')'));
-          })
+        value.filter(
+          ([text, , , grammar]) =>
+            !(
+              (text.length === 1 && grammar === undefined) ||
+              text.includes('׆')
+            )
+        )
       )
     );
 
@@ -137,12 +118,10 @@ async function run() {
 
           console.log(words[sheldonWordIndex]);
 
-          const sheldonStrongs =
-            rawStrongs !== ''
-              ? `${book.id < 40 ? 'H' : 'G'}${rawStrongs
-                  .replace(STRONGS_REGEX, '')
-                  .padStart(4, '0')}`
-              : '';
+          const sheldonStrongs = toCleanSheldonStrongs(
+            rawStrongs,
+            book.id < 40 ? 'H' : 'G'
+          );
 
           const strongs = sheldonStrongs;
 
@@ -223,6 +202,12 @@ async function run() {
   await client.$disconnect();
 }
 
+function toCleanSheldonStrongs(rawStrongs: string, prefix: 'G' | 'H') {
+  return rawStrongs !== ''
+    ? `${prefix}${rawStrongs.replace(STRONGS_REGEX, '').padStart(4, '0')}`
+    : '';
+}
+
 async function buildUsfmBookData({
   book,
   sheldonData,
@@ -263,6 +248,7 @@ async function buildUsfmBookData({
         switch (verseObject['tag']) {
           case 'w':
             currentVerse.push({
+              type: 'word',
               text: verseObject['text'],
               strong: verseObject['strong'],
             });
@@ -282,6 +268,10 @@ async function buildUsfmBookData({
             }
             break;
           }
+          case 'f': {
+            currentVerse.push(parseFootnoteContent(verseObject['content']));
+            break;
+          }
           default:
         }
       }
@@ -289,12 +279,35 @@ async function buildUsfmBookData({
   }
   console.log(book.name);
 
-  console.log(
-    compareShape(flattenChapters(runningAdjustedChapters), sheldonData)
-  );
-  console.log(
-    compareShape(sheldonData, flattenChapters(runningAdjustedChapters))
-  );
+  const result = flattenChapters(runningAdjustedChapters);
+
+  console.log(compareShape(result, sheldonData));
+}
+
+function parseFootnoteContent(content: string) {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  let footnoteObject = content.match(
+    /^\+ \\ft (?<footnoteType>[Q|K]) \\\+w (?<word>[^|]+)\|(?<attributes>.*)/
+  )?.groups;
+
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  footnoteObject = footnoteObject!;
+  const footnoteAttributes: { [key: string]: string } = {};
+
+  for (const attributeMatch of footnoteObject['attributes'].matchAll(
+    /(?<key>[^=\s]+)="(?<value>[^"]+)"/g
+  )) {
+    const { key, value } = attributeMatch!.groups!;
+    footnoteAttributes[key] = value;
+  }
+
+  delete footnoteObject['attributes'];
+
+  return {
+    ...footnoteObject,
+    ...footnoteAttributes,
+    type: 'footnote',
+  };
 }
 
 function flattenChapters(chapters: any) {
@@ -313,25 +326,107 @@ function flattenChapters(chapters: any) {
   return resultingChapters;
 }
 
-function compareShape(a: any, b: any, i?: number) {
-  if (Array.isArray(a) && Array.isArray(b)) {
-    console.log(`  ${(i ?? -1) + 1 ? `${i} ` : ''}${a.length} : ${b.length}`);
-    if (a.length !== b.length) return false;
-    for (let i = 0; i < a.length; ++i) {
-      if (!compareShape(a[i], b[i], i)) {
-        console.log(a[i]);
-        console.log(b[i]);
-        throw NaN;
+function compareShape(
+  currentUsfmData: any,
+  currentSheldonData: any,
+  i?: number
+) {
+  if (Array.isArray(currentUsfmData) && Array.isArray(currentSheldonData)) {
+    console.log(
+      `  ${(i ?? -1) + 1 ? `${i} ` : ''}${currentUsfmData.length} : ${
+        currentSheldonData.length
+      }`
+    );
+    if (currentUsfmData.length !== currentSheldonData.length) {
+      if (
+        !(
+          currentUsfmData[0] instanceof Object &&
+          currentSheldonData[0] instanceof Array &&
+          typeof currentSheldonData[0][0] === 'string' &&
+          rectifyShape(currentUsfmData, currentSheldonData)
+        )
+      ) {
+        return false;
+      }
+    }
+    for (let i = 0; i < currentUsfmData.length; ++i) {
+      if (!compareShape(currentUsfmData[i], currentSheldonData[i], i)) {
+        // console.log(currentUsfmData[i]);
+        // console.log(currentSheldonData[i]);
         return false;
       }
     }
     return true;
   }
 
-  return !(
-    (Array.isArray(a) && (Array.isArray(a[0]) || typeof b !== 'object')) ||
-    (Array.isArray(b) && (Array.isArray(b[0]) || typeof a !== 'object'))
+  return (
+    Array.isArray(currentSheldonData) &&
+    typeof currentSheldonData[0] === 'string' &&
+    !Array.isArray(currentUsfmData)
   );
+}
+
+function rectifyShape(
+  usfmVerse: { type: string; [key: string]: string }[],
+  sheldonVerse: string[][]
+) {
+  if (usfmVerse.length === sheldonVerse.length) {
+    console.log('Eh???? Rectifying called, but unnecessary');
+    suspendSync();
+  }
+
+  /// so we know that probably the usfm verse length is greater than the sheldon verse
+  for (let i = 0; i < usfmVerse.length && i < sheldonVerse.length; ++i) {
+    console.log(JSON.stringify(usfmVerse[i + 1]));
+    if (usfmVerse[i]['type'] !== 'footnote') {
+      /////////// harmonize sure gloss word combination process works with ktiv qere - get offsets right
+      if (
+        stripForm(usfmVerse[i]['strong']) ===
+        (usfmVerse[i + 1]?.type === 'word' &&
+          stripForm(usfmVerse[i + 1]['strong']))
+      ) {
+        if (
+          sheldonVerse[i][4] !== sheldonVerse[i + 1]?.[4] &&
+          toCleanSheldonStrongs(sheldonVerse[i + 1]?.[4] ?? '', 'H') !==
+            eStrongToSimple(stripForm(usfmVerse[i]['strong']))
+        ) {
+          usfmVerse.splice(i, 1);
+          usfmVerse[i]['text'] = '????';
+          --i;
+        }
+      }
+      if (
+        sheldonVerse[i] &&
+        (isSheldonWordKtivQere(sheldonVerse[i]) ||
+          usfmVerse[i + 1]?.type === 'footnote')
+      ) {
+        const offset = rectifyKtivQere({ sheldonVerse, usfmVerse, i });
+        i += offset;
+      }
+    } else {
+      console.log('ZEH WHAT???????');
+      suspendSync();
+    }
+  }
+  if (usfmVerse.length !== sheldonVerse.length) {
+    console.log(
+      `MA???? didn't rectify! lengths: ${usfmVerse.length} - ${sheldonVerse.length}`
+    );
+    console.log(
+      `usfm: \n${JSON.stringify(
+        usfmVerse.map(({ text }) => text),
+        null,
+        1
+      )}\n\nsheldon: \n${JSON.stringify(
+        sheldonVerse.map((value) => value[0]),
+        null,
+        1
+      )}`
+    );
+    suspendSync();
+  } else console.log('RECTIFIED! :)');
+  return true;
+  return false;
 }
 
 function stripForm(strongsWithForm: string) {
@@ -346,8 +441,63 @@ function eStrongToSimple(eStrong: string) {
 
 function suspend() {
   return new Promise(() => {
-    const x = true;
-    while (x);
+    suspendSync();
   });
 }
+
+function suspendSync() {
+  const x = true;
+  while (x);
+}
+
+function rectifyKtivQere({
+  sheldonVerse,
+  usfmVerse,
+  i,
+}: {
+  sheldonVerse: string[][];
+  usfmVerse: { [key: string]: string; type: string }[];
+  i: number;
+}) {
+  // simple case: \w+\f --- []+() or ()+[] or ""+() or ""+[]
+  if (
+    usfmVerse[i].type === 'word' &&
+    usfmVerse[i + 1]?.type === 'footnote' &&
+    sheldonVerse[i + 1] &&
+    isSheldonWordKtivQere(sheldonVerse[i + 1]) &&
+    isSheldonWordKtivQere(sheldonVerse[i + 1]) !==
+      isSheldonWordKtivQere(sheldonVerse[i])
+  ) {
+    usfmVerse[i + 1]['type'] = 'word';
+    return 1;
+  } else if (
+    usfmVerse[i].type === 'word' &&
+    usfmVerse[i + 1]?.type === 'word'
+  ) {
+    if (
+      eStrongToSimple(stripForm(usfmVerse[i]['strong'])) ===
+      toCleanSheldonStrongs(sheldonVerse[i][4], 'H')
+    ) {
+      console.log('OK, back to the lobby....');
+    } else {
+      sheldonVerse.splice(i, 1);
+      return -1;
+    }
+  } else {
+    console.log('EHH?????');
+    console.log(usfmVerse[i]);
+    console.log(usfmVerse[i + 1]);
+    console.log(sheldonVerse[i]);
+    console.log(sheldonVerse[i + 1]);
+    suspendSync();
+  }
+  return 0;
+
+  // // slightly less simple case: \w+\f --- [] or ()     //does it occur?
+}
+
+function isSheldonWordKtivQere([word]: string[]): 'Q' | 'K' | false {
+  return word.includes('(') ? 'Q' : word.includes('[') ? 'K' : false;
+}
+
 run();
