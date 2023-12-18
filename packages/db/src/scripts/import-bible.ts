@@ -1,189 +1,88 @@
 import { readFileSync } from 'fs';
 import { bookKeys } from '../../../../data/book-keys';
 import { morphologyData } from '../../../../data/morphology';
-import { PrismaClient } from '@prisma/client';
-import { assert } from 'console';
+import { Book, Language, PrismaClient } from '@prisma/client';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const usfm = require('usfm-js');
 
 const client = new PrismaClient();
-
-const STRONGS_REGEX = / \[e\]/;
+/// TODO:
+/// Serious cleaning!!!!!!!!!!!!!!!!!!!!!!!!!
 // TODO: compress adjacent (with same strongs), make sure to use sheldon hebrew text.
 //  - do the ktiv-qere situation
+
+interface CommonEntryData {
+  text: string;
+  grammar: string;
+  strong: string;
+}
+interface WordDataEntry extends CommonEntryData {
+  id: string;
+  verseId: string;
+  english: string;
+}
+interface ProcessedSheldonWordEntry extends CommonEntryData {
+  transliteration: string;
+  english: string;
+}
+interface UsfmWordEntry extends CommonEntryData {
+  i: any;
+}
+
+interface LemmaDataEntry {
+  [grammar: string]: {
+    verseIds: string[];
+    formId?: string;
+  };
+}
+
 async function run() {
+  //------- FOR TESTING -----------
   await client.gloss.deleteMany();
   await client.word.deleteMany();
   await client.verse.deleteMany();
   await client.book.deleteMany();
+  await client.lemmaForm.deleteMany();
+  await client.lemmaResource.deleteMany();
+  await client.lemma.deleteMany();
   await client.language.deleteMany();
-  const wordData: {
-    id: string;
-    text: string;
-    verseId: string;
-    grammar: string;
-    strongs: string;
-    english: string;
-  }[] = [];
-  const lemmas: {
-    [strongs: string]: {
-      [grammar: string]: { verseIds: string[]; formId?: string };
-    };
-  } = {};
 
-  for (let bookIndex = 0; bookIndex < (39 || bookKeys.length); bookIndex++) {
-    const bookKey = bookKeys[bookIndex];
-    const chapters = morphologyData[bookKey];
+  //-------------------------------
 
-    const book = await client.book.create({
-      data: {
-        id: bookIndex + 1,
-        name: bookKey,
-      },
-    });
+  const wordData: WordDataEntry[] = [];
 
-    const sheldonData = morphologyData[bookKey].map((value) =>
-      value.map((value) =>
-        value.filter(
-          ([text, , , grammar]) =>
-            !(
-              (text.length === 1 && grammar === undefined) ||
-              text.includes('׆')
-            )
-        )
-      )
-    );
+  const lemmas: { [strong: string]: LemmaDataEntry } = {};
 
-    buildUsfmBookData({ book, sheldonData });
-    continue;
-
-    for (let chapterIndex = 0; chapterIndex < chapters.length; chapterIndex++) {
-      const verses = chapters[chapterIndex];
-      const chapterNumber = chapterIndex + 1;
-
-      for (let verseIndex = 0; verseIndex < verses.length; verseIndex++) {
-        let words = verses[verseIndex].filter(
-          ([text, , english, grammar]) =>
-            !(english === ' - ' && grammar === undefined) && !(text === 'ס')
-        );
-        words = words
-          .filter(([text], index) => {
-            if (text.startsWith('[') && text.endsWith(']')) {
-              if (
-                words[index - 1] &&
-                words[index - 1][0].startsWith('(') &&
-                words[index - 1][0].endsWith(')')
-              ) {
-                return true;
-              } else if (
-                words[index + 1] &&
-                words[index + 1][0].startsWith('(') &&
-                words[index + 1][0].endsWith(')')
-              ) {
-                return true;
-              }
-              return false;
-            }
-            return true;
-          })
-          .filter(([text]) => {
-            return !(text.startsWith('(') && text.endsWith(')'));
-          });
-
-        const verseNumber = verseIndex + 1;
-
-        const verseId = [
-          book.id.toString().padStart(2, '0'),
-          chapterNumber.toString().padStart(3, '0'),
-          verseNumber.toString().padStart(3, '0'),
-        ].join('');
-
-        const verse = await client.verse.create({
-          data: {
-            id: verseId,
-            number: verseNumber,
-            chapter: chapterNumber,
-            book: { connect: { id: book.id } },
-          },
-        });
-
-        for (
-          let sheldonWordIndex = 0;
-          sheldonWordIndex < words.length;
-          sheldonWordIndex++
-        ) {
-          const [text, , english, grammar = '', rawStrongs = ''] =
-            words[sheldonWordIndex];
-
-          console.log(words[sheldonWordIndex]);
-
-          const sheldonStrongs = toCleanSheldonStrongs(
-            rawStrongs,
-            book.id < 40 ? 'H' : 'G'
-          );
-
-          const strongs = sheldonStrongs;
-
-          // We have to accumulate word data until we have inserted all of the lemma data.
-          const wordId = `${verseId}${(sheldonWordIndex + 1)
-            .toString()
-            .padStart(2, '0')}`;
-          wordData.push({
-            id: wordId,
-            text,
-            verseId: verse.id,
-            grammar,
-            strongs,
-            english,
-          });
-
-          lemmas[strongs] ??= {};
-          lemmas[strongs][grammar] ??= { verseIds: [] };
-          lemmas[strongs][grammar].verseIds.push(wordId);
-        }
-      }
+  const books: Book[] = [...Array(39 || bookKeys.length).keys()].map(
+    (bookIndex) => {
+      return { id: bookIndex + 1, name: bookKeys[bookIndex] };
     }
-  }
+  );
 
-  for (const [lemma, forms] of Object.entries(lemmas)) {
-    try {
-      await client.lemma.create({
-        data: {
-          id: lemma,
-          forms: {
-            createMany: {
-              data: Object.keys(forms).map((grammar, i) => {
-                const id = `${lemma}-${(i + 1).toString().padStart(3, '0')}`;
-                lemmas[lemma][grammar].formId = id;
-                return {
-                  id,
-                  grammar,
-                };
-              }),
-            },
-          },
-        },
-      });
-    } catch (error) {
-      console.log(
-        lemma,
-        Object.values(forms).map((form) => form.formId)
-      );
-      throw error;
-    }
-  }
-
-  await client.word.createMany({
-    data: wordData.map((word) => ({
-      id: word.id,
-      verseId: word.verseId,
-      text: word.text,
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      formId: lemmas[word.strongs][word.grammar].formId!,
-    })),
+  await client.book.createMany({
+    data: books,
   });
 
+  for (const book of books) {
+    const sheldonData = parseSheldonData(book);
+    console.log('parsed sheldon data');
+    // const usfmData = parseUsfmData(book);
+
+    await extractData(sheldonData, {
+      verseIdTag: 'S',
+      from: book,
+      into: { wordData, lemmas },
+    });
+    console.log('extracted sheldon data');
+    // extractData(usfmData, {
+    //   verseIdTag: 'U',
+    //   from: book,
+    //   into: { wordData, lemmas },
+    // });
+  }
+
+  console.log('did extracting');
   const language = await client.language.create({
     data: {
       code: 'eng',
@@ -191,6 +90,69 @@ async function run() {
     },
   });
 
+  console.log('made language');
+  addLemmaFormIds(lemmas);
+  console.log('added form ids');
+  await createLemmas(lemmas);
+  console.log('created lemmas');
+  await createWords(wordData, lemmas);
+  console.log('created words');
+  await createGlosses(wordData, language);
+  console.log('created glosses');
+  console.log('du-done!');
+
+  await client.$disconnect();
+}
+
+function addLemmaFormIds(lemmas: { [strong: string]: LemmaDataEntry }) {
+  for (const [lemma, forms] of Object.entries(lemmas)) {
+    Object.values(forms).forEach((form, i) => {
+      form.formId = `${lemma}-${(i + 1).toString().padStart(3, '0')}`;
+    });
+  }
+}
+
+async function createLemmas(lemmas: { [strong: string]: LemmaDataEntry }) {
+  for (const [lemma, forms] of Object.entries(lemmas)) {
+    try {
+      await client.lemma.create({
+        data: {
+          id: lemma,
+          forms: {
+            createMany: {
+              data: Object.entries(forms).map(([grammar, { formId }]) => {
+                return {
+                  id: formId!,
+                  grammar,
+                };
+              }),
+            },
+          },
+        },
+      });
+    } catch (e) {
+      console.log(`${lemma}: ${JSON.stringify(forms, undefined, 2)}`);
+      suspendSync();
+    }
+  }
+}
+
+async function createWords(
+  wordData: WordDataEntry[],
+  lemmas: { [strong: string]: LemmaDataEntry }
+) {
+  await client.word.createMany({
+    data: wordData.map((word) => ({
+      id: word.id,
+      verseId: word.verseId,
+      text: word.text,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      formId: lemmas[word.strong][word.grammar].formId!,
+    })),
+  });
+}
+
+async function createGlosses(wordData: WordDataEntry[], language: Language) {
   await client.gloss.createMany({
     data: wordData.map((word) => ({
       wordId: word.id,
@@ -198,25 +160,45 @@ async function run() {
       gloss: word.english,
     })),
   });
-
-  await client.$disconnect();
 }
 
-function toCleanSheldonStrongs(rawStrongs: string, prefix: 'G' | 'H') {
-  return rawStrongs !== ''
-    ? `${prefix}${rawStrongs.replace(STRONGS_REGEX, '').padStart(4, '0')}`
-    : '';
+function parseSheldonData(book: Book): ProcessedSheldonWordEntry[][][] {
+  return morphologyData[book.name].map((chapter) =>
+    chapter.map((verse) =>
+      verse
+        .filter(
+          ([text]: string[]) =>
+            !(text === 'פ' || text === 'ס' || text.includes('׆'))
+        )
+        .map((word) => toSheldonWordEntry(word, { book }))
+    )
+  );
 }
 
-async function buildUsfmBookData({
-  book,
-  sheldonData,
-}: {
-  book: any;
-  sheldonData: any;
-}) {
-  // build database.
-  const rawData = usfm.toJSON(
+function toSheldonWordEntry(
+  [text, transliteration, english, grammar = '', strong = '']: string[],
+  context: { book: Book }
+): ProcessedSheldonWordEntry {
+  return {
+    text,
+    transliteration,
+    english,
+    grammar,
+    strong:
+      strong !== ''
+        ? `${context.book.id < 40 ? 'H' : 'G'}${strong
+            .replace(/ \[e\]/, '')
+            .padStart(4, '0')}`
+        : '????',
+  };
+}
+
+function parseUsfmData(book: Book) {
+  const rawData: {
+    chapters: {
+      [chapterNumber: number]: { [verseNumber: string]: object; front?: any };
+    };
+  } = usfm.toJSON(
     readFileSync(
       `data/unfoldingWord/${book.id
         .toString()
@@ -225,32 +207,31 @@ async function buildUsfmBookData({
     )
   );
 
-  const runningAdjustedChapters: any = {};
+  const runningAdjustedChapters: {
+    [chapterNumber: number]: {
+      [verseNumber: number]: object[];
+    };
+  } = {};
   let currentChapterNumber = 1;
   let currentVerseNumber = 1;
 
-  for (const [chapterNumber, chapter] of Object.entries(rawData['chapters'])) {
+  for (const [chapterNumber, chapter] of Object.entries(rawData.chapters)) {
     currentChapterNumber = +chapterNumber.trim();
-    runningAdjustedChapters[currentChapterNumber] =
-      runningAdjustedChapters[currentChapterNumber] || {};
-
-    delete (chapter as any)['front'];
-    for (const [verseNumber, verse] of Object.entries(chapter as any)) {
+    delete chapter['front'];
+    for (const [verseNumber, verse] of Object.entries(chapter)) {
       currentVerseNumber = +verseNumber.trim();
-      for (const verseObject of (verse as any)['verseObjects']) {
-        runningAdjustedChapters[currentChapterNumber] =
-          runningAdjustedChapters[currentChapterNumber] || {};
+      for (const verseObject of verse['verseObjects']) {
+        runningAdjustedChapters[currentChapterNumber] ??= {};
         const currentVerse = (runningAdjustedChapters[currentChapterNumber][
           currentVerseNumber
-        ] =
-          runningAdjustedChapters[currentChapterNumber][currentVerseNumber] ||
-          []);
+        ] ??= []);
         switch (verseObject['tag']) {
           case 'w':
             currentVerse.push({
               type: 'word',
               text: verseObject['text'],
               strong: verseObject['strong'],
+              grammar: verseObject['morph'],
             });
             break;
           case 'ca':
@@ -272,26 +253,18 @@ async function buildUsfmBookData({
             currentVerse.push(parseFootnoteContent(verseObject['content']));
             break;
           }
-          default:
         }
       }
     }
   }
-  console.log(book.name);
-
-  const result = flattenChapters(runningAdjustedChapters);
-
-  console.log(compareShape(result, sheldonData));
+  return flattenChapters(runningAdjustedChapters);
 }
 
 function parseFootnoteContent(content: string) {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  let footnoteObject = content.match(
-    /^\+ \\ft (?<footnoteType>[Q|K]) \\\+w (?<word>[^|]+)\|(?<attributes>.*)/
-  )?.groups;
-
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  footnoteObject = footnoteObject!;
+  const footnoteObject = content.match(
+    /^\+ \\ft (?<footnoteType>[Q|K]) \\\+w (?<text>[^|]+)\|(?<attributes>.*)/
+  )!.groups!;
   const footnoteAttributes: { [key: string]: string } = {};
 
   for (const attributeMatch of footnoteObject['attributes'].matchAll(
@@ -299,6 +272,10 @@ function parseFootnoteContent(content: string) {
   )) {
     const { key, value } = attributeMatch!.groups!;
     footnoteAttributes[key] = value;
+  }
+
+  if ('x-morph' in footnoteAttributes) {
+    footnoteAttributes['grammar'] = footnoteAttributes['x-morph'];
   }
 
   delete footnoteObject['attributes'];
@@ -310,19 +287,17 @@ function parseFootnoteContent(content: string) {
   };
 }
 
-function flattenChapters(chapters: any) {
-  const resultingChapters: any[] = [];
-  Object.entries(chapters).forEach(
-    ([chapterNumber, chapterData]: [any, any]) => {
-      const currentChapter: any[] = (resultingChapters[+chapterNumber - 1] =
-        []);
-      Object.entries(chapterData).forEach(
-        ([verseNumber, verseData]: [any, any]) => {
-          currentChapter[+verseNumber - 1] = verseData;
-        }
-      );
-    }
-  );
+function flattenChapters(chapters: object) {
+  const resultingChapters: object[][][] = [];
+  Object.entries(chapters).forEach(([chapterNumber, chapterData]: object[]) => {
+    const currentChapter: object[] = (resultingChapters[+chapterNumber - 1] =
+      []);
+    Object.entries(chapterData).forEach(
+      ([verseNumber, verseData]: object[]) => {
+        currentChapter[+verseNumber - 1] = verseData;
+      }
+    );
+  });
   return resultingChapters;
 }
 
@@ -439,12 +414,6 @@ function eStrongToSimple(eStrong: string) {
   return eStrong.replace(/[a-z]/, '');
 }
 
-function suspend() {
-  return new Promise(() => {
-    suspendSync();
-  });
-}
-
 function suspendSync() {
   const x = true;
   while (x);
@@ -500,4 +469,83 @@ function isSheldonWordKtivQere([word]: string[]): 'Q' | 'K' | false {
   return word.includes('(') ? 'Q' : word.includes('[') ? 'K' : false;
 }
 
+async function extractData(
+  baseData: CommonEntryData[][][],
+  {
+    verseIdTag,
+    from: book,
+    into: { wordData, lemmas },
+  }: {
+    verseIdTag: string;
+    from: Book;
+    into: {
+      wordData: WordDataEntry[];
+      lemmas: { [strong: string]: LemmaDataEntry };
+    };
+  }
+) {
+  const verseData: { id: string; number: number; chapter: number }[] = [];
+  for (let chapterIndex = 0; chapterIndex < baseData.length; chapterIndex++) {
+    const verses = baseData[chapterIndex];
+    const chapterNumber = chapterIndex + 1;
+
+    for (let verseIndex = 0; verseIndex < verses.length; verseIndex++) {
+      const words = verses[verseIndex];
+      const verseNumber = verseIndex + 1;
+
+      const verseId = [
+        // `${verseIdTag}-`,
+        book.id.toString().padStart(2, '0'),
+        chapterNumber.toString().padStart(3, '0'),
+        verseNumber.toString().padStart(3, '0'),
+      ].join('');
+      verseData.push({
+        id: verseId,
+        number: verseNumber,
+        chapter: chapterNumber,
+      });
+
+      for (let wordIndex = 0; wordIndex < words.length; wordIndex++) {
+        const {
+          text,
+          grammar,
+          strong,
+          english = '?',
+        }: {
+          text: string;
+          grammar: string;
+          strong: string;
+          english?: string;
+        } = words[wordIndex];
+
+        const wordId = `${verseId}${(wordIndex + 1)
+          .toString()
+          .padStart(2, '0')}`;
+        wordData.push({
+          id: wordId,
+          text: text.normalize(),
+          verseId: verseId,
+          grammar,
+          strong,
+          english,
+        });
+
+        lemmas[strong] ??= {};
+        lemmas[strong][grammar] ??= { verseIds: [] };
+        lemmas[strong][grammar].verseIds.push(wordId);
+      }
+    }
+  }
+
+  await client.verse.createMany({
+    data: verseData.map((verseDatum) => {
+      return { ...verseDatum, bookId: book.id };
+    }),
+  });
+}
+
+function toCleanSheldonStrongs(arg0: string, arg1: string) {
+  throw 0;
+  return '';
+}
 run();
