@@ -66,6 +66,7 @@ async function run() {
 
   for (const book of books) {
     const sheldonData = parseSheldonData(book);
+    const usfmData = parseUsfmData(book);
     console.log('parsed sheldon data');
     // const usfmData = parseUsfmData(book);
 
@@ -75,11 +76,12 @@ async function run() {
       into: { wordData, lemmas, verseData },
     });
     console.log('extracted sheldon data');
-    // extractData(usfmData, {
-    //   verseIdTag: 'U',
-    //   from: book,
-    //   into: { wordData, lemmas },
-    // });
+    await extractData(usfmData, {
+      verseIdTag: 'U',
+      from: book,
+      into: { wordData, lemmas, verseData },
+    });
+    console.log('extracted usfm data');
   }
 
   console.log('did extracting');
@@ -177,12 +179,12 @@ async function extractData(
       const words = verses[verseIndex];
       const verseNumber = verseIndex + 1;
 
-      const verseId = [
-        // `${verseIdTag}-`,
-        book.id.toString().padStart(2, '0'),
-        chapterNumber.toString().padStart(3, '0'),
-        verseNumber.toString().padStart(3, '0'),
-      ].join('');
+      const verseId = generateVerseId(
+        verseIdTag,
+        book,
+        chapterNumber,
+        verseNumber
+      );
       verseData.push({
         id: verseId,
         number: verseNumber,
@@ -221,6 +223,20 @@ async function extractData(
       }
     }
   }
+}
+
+function generateVerseId(
+  verseIdTag: string,
+  book: Book,
+  chapterNumber: number,
+  verseNumber: number
+) {
+  return [
+    `${verseIdTag}-`,
+    book.id.toString().padStart(2, '0'),
+    chapterNumber.toString().padStart(3, '0'),
+    verseNumber.toString().padStart(3, '0'),
+  ].join('');
 }
 
 async function createVerses(verseData: Verse[]) {
