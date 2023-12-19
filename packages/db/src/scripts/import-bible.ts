@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs';
 import { bookKeys } from '../../../../data/book-keys';
 import { morphologyData } from '../../../../data/morphology';
-import { Book, Language, PrismaClient } from '@prisma/client';
+import { Book, Language, PrismaClient, Verse } from '@prisma/client';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const usfm = require('usfm-js');
@@ -11,6 +11,11 @@ const client = new PrismaClient();
 /// Serious cleaning!!!!!!!!!!!!!!!!!!!!!!!!!
 // TODO: compress adjacent (with same strongs), make sure to use sheldon hebrew text.
 //  - do the ktiv-qere situation
+
+function suspendSync() {
+  const x = true;
+  while (x);
+}
 
 interface CommonEntryData {
   text: string;
@@ -27,7 +32,10 @@ interface ProcessedSheldonWordEntry extends CommonEntryData {
   english: string;
 }
 interface UsfmWordEntry extends CommonEntryData {
-  i: any;
+  type: string;
+}
+interface UsfmFootnoteEntry extends UsfmWordEntry {
+  footnoteType: 'Q' | 'K';
 }
 
 interface LemmaDataEntry {
@@ -39,30 +47,22 @@ interface LemmaDataEntry {
 
 async function run() {
   //------- FOR TESTING -----------
-  await client.gloss.deleteMany();
-  await client.word.deleteMany();
-  await client.verse.deleteMany();
-  await client.book.deleteMany();
-  await client.lemmaForm.deleteMany();
-  await client.lemmaResource.deleteMany();
-  await client.lemma.deleteMany();
-  await client.language.deleteMany();
+  // await client.gloss.deleteMany();
+  // await client.word.deleteMany();
+  // await client.verse.deleteMany();
+  // await client.book.deleteMany();
+  // await client.lemmaForm.deleteMany();
+  // await client.lemmaResource.deleteMany();
+  // await client.lemma.deleteMany();
+  // await client.language.deleteMany();
 
   //-------------------------------
 
   const wordData: WordDataEntry[] = [];
-
   const lemmas: { [strong: string]: LemmaDataEntry } = {};
+  const verseData: Verse[] = [];
 
-  const books: Book[] = [...Array(39 || bookKeys.length).keys()].map(
-    (bookIndex) => {
-      return { id: bookIndex + 1, name: bookKeys[bookIndex] };
-    }
-  );
-
-  await client.book.createMany({
-    data: books,
-  });
+  const books: Book[] = await createBooks();
 
   for (const book of books) {
     const sheldonData = parseSheldonData(book);
@@ -72,7 +72,7 @@ async function run() {
     await extractData(sheldonData, {
       verseIdTag: 'S',
       from: book,
-      into: { wordData, lemmas },
+      into: { wordData, lemmas, verseData },
     });
     console.log('extracted sheldon data');
     // extractData(usfmData, {
@@ -91,6 +91,8 @@ async function run() {
   });
 
   console.log('made language');
+  await createVerses(verseData);
+
   addLemmaFormIds(lemmas);
   console.log('added form ids');
   await createLemmas(lemmas);
@@ -102,6 +104,129 @@ async function run() {
   console.log('du-done!');
 
   await client.$disconnect();
+}
+
+async function createBooks() {
+  const books: Book[] = [...Array(1 || bookKeys.length).keys()].map(
+    (bookIndex) => {
+      return { id: bookIndex + 1, name: bookKeys[bookIndex] };
+    }
+  );
+
+  await client.book.createMany({
+    data: books,
+  });
+  return books;
+}
+
+function parseSheldonData(book: Book): ProcessedSheldonWordEntry[][][] {
+  return morphologyData[book.name].map((chapter) =>
+    chapter.map((verse) =>
+      verse
+        .filter(
+          ([text]: string[]) =>
+            !(text === 'פ' || text === 'ס' || text.includes('׆'))
+        )
+        .flatMap((rawWordEntry) => toSheldonWordEntries(rawWordEntry, { book }))
+    )
+  );
+}
+
+function toSheldonWordEntries(
+  [text, transliteration, english, grammar = '', strong = '']: string[],
+  context: { book: Book }
+): ProcessedSheldonWordEntry[] {
+  const WORD_SEP_REGEX = /־(?!$)| (?!׀)/;
+  return text.split(WORD_SEP_REGEX).map((subText) => {
+    return {
+      text: subText,
+      transliteration,
+      english,
+      grammar,
+      strong:
+        strong !== ''
+          ? `${context.book.id < 40 ? 'H' : 'G'}${strong
+              .replace(/ \[e\]/, '')
+              .padStart(4, '0')}`
+          : '????',
+    };
+  });
+}
+
+async function extractData(
+  baseData: CommonEntryData[][][],
+  {
+    verseIdTag,
+    from: book,
+    into: { wordData, lemmas, verseData },
+  }: {
+    verseIdTag: string;
+    from: Book;
+    into: {
+      wordData: WordDataEntry[];
+      lemmas: { [strong: string]: LemmaDataEntry };
+      verseData: Verse[];
+    };
+  }
+) {
+  for (let chapterIndex = 0; chapterIndex < baseData.length; chapterIndex++) {
+    const verses = baseData[chapterIndex];
+    const chapterNumber = chapterIndex + 1;
+
+    for (let verseIndex = 0; verseIndex < verses.length; verseIndex++) {
+      const words = verses[verseIndex];
+      const verseNumber = verseIndex + 1;
+
+      const verseId = [
+        // `${verseIdTag}-`,
+        book.id.toString().padStart(2, '0'),
+        chapterNumber.toString().padStart(3, '0'),
+        verseNumber.toString().padStart(3, '0'),
+      ].join('');
+      verseData.push({
+        id: verseId,
+        number: verseNumber,
+        chapter: chapterNumber,
+        bookId: book.id,
+      });
+
+      for (let wordIndex = 0; wordIndex < words.length; wordIndex++) {
+        const {
+          text,
+          grammar,
+          strong,
+          english = '?',
+        }: {
+          text: string;
+          grammar: string;
+          strong: string;
+          english?: string;
+        } = words[wordIndex];
+
+        const wordId = `${verseId}${(wordIndex + 1)
+          .toString()
+          .padStart(2, '0')}`;
+        wordData.push({
+          id: wordId,
+          text: text.normalize(),
+          verseId: verseId,
+          grammar,
+          strong,
+          english,
+        });
+
+        lemmas[strong] ??= {};
+        lemmas[strong][grammar] ??= { verseIds: [] };
+        lemmas[strong][grammar].verseIds.push(wordId);
+      }
+    }
+  }
+}
+
+async function createVerses(verseData: Verse[]) {
+  await client.verse.createMany({
+    data: verseData,
+  });
 }
 
 function addLemmaFormIds(lemmas: { [strong: string]: LemmaDataEntry }) {
@@ -162,37 +287,6 @@ async function createGlosses(wordData: WordDataEntry[], language: Language) {
   });
 }
 
-function parseSheldonData(book: Book): ProcessedSheldonWordEntry[][][] {
-  return morphologyData[book.name].map((chapter) =>
-    chapter.map((verse) =>
-      verse
-        .filter(
-          ([text]: string[]) =>
-            !(text === 'פ' || text === 'ס' || text.includes('׆'))
-        )
-        .map((word) => toSheldonWordEntry(word, { book }))
-    )
-  );
-}
-
-function toSheldonWordEntry(
-  [text, transliteration, english, grammar = '', strong = '']: string[],
-  context: { book: Book }
-): ProcessedSheldonWordEntry {
-  return {
-    text,
-    transliteration,
-    english,
-    grammar,
-    strong:
-      strong !== ''
-        ? `${context.book.id < 40 ? 'H' : 'G'}${strong
-            .replace(/ \[e\]/, '')
-            .padStart(4, '0')}`
-        : '????',
-  };
-}
-
 function parseUsfmData(book: Book) {
   const rawData: {
     chapters: {
@@ -209,7 +303,7 @@ function parseUsfmData(book: Book) {
 
   const runningAdjustedChapters: {
     [chapterNumber: number]: {
-      [verseNumber: number]: object[];
+      [verseNumber: number]: UsfmWordEntry[];
     };
   } = {};
   let currentChapterNumber = 1;
@@ -238,14 +332,14 @@ function parseUsfmData(book: Book) {
             currentChapterNumber = +verseObject['content'].trim();
             break;
           case 'va': {
-            const theVerseNumber = verseObject['content'].trim();
-            if (theVerseNumber.indexOf(':') === -1) {
-              currentVerseNumber = +theVerseNumber;
+            const unparsedVerseNumber = verseObject['content'].trim();
+            if (unparsedVerseNumber.indexOf(':') === -1) {
+              currentVerseNumber = +unparsedVerseNumber;
             } else {
               const [alternateChapterNumber, alternateVerseNumber] =
-                theVerseNumber.split(':');
-              currentChapterNumber = alternateChapterNumber;
-              currentVerseNumber = alternateVerseNumber;
+                unparsedVerseNumber.split(':');
+              currentChapterNumber = +alternateChapterNumber;
+              currentVerseNumber = +alternateVerseNumber;
             }
             break;
           }
@@ -260,11 +354,12 @@ function parseUsfmData(book: Book) {
   return flattenChapters(runningAdjustedChapters);
 }
 
-function parseFootnoteContent(content: string) {
+function parseFootnoteContent(content: string): UsfmFootnoteEntry {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const footnoteObject = content.match(
     /^\+ \\ft (?<footnoteType>[Q|K]) \\\+w (?<text>[^|]+)\|(?<attributes>.*)/
   )!.groups!;
+
   const footnoteAttributes: { [key: string]: string } = {};
 
   for (const attributeMatch of footnoteObject['attributes'].matchAll(
@@ -281,65 +376,70 @@ function parseFootnoteContent(content: string) {
   delete footnoteObject['attributes'];
 
   return {
-    ...footnoteObject,
-    ...footnoteAttributes,
+    ...(footnoteObject as {
+      footnoteType: 'Q' | 'K';
+      text: string;
+    }),
+    ...(footnoteAttributes as { grammar: string; strong: string }),
     type: 'footnote',
   };
 }
 
 function flattenChapters(chapters: object) {
-  const resultingChapters: object[][][] = [];
-  Object.entries(chapters).forEach(([chapterNumber, chapterData]: object[]) => {
-    const currentChapter: object[] = (resultingChapters[+chapterNumber - 1] =
-      []);
-    Object.entries(chapterData).forEach(
-      ([verseNumber, verseData]: object[]) => {
-        currentChapter[+verseNumber - 1] = verseData;
-      }
-    );
-  });
+  const resultingChapters: UsfmWordEntry[][][] = [];
+  Object.entries(chapters).forEach(
+    ([chapterNumber, chapterData]: [string, object]) => {
+      const currentChapter: object[] = (resultingChapters[+chapterNumber - 1] =
+        []);
+      Object.entries(chapterData).forEach(
+        ([verseNumber, verseData]: [string, UsfmWordEntry]) => {
+          currentChapter[+verseNumber - 1] = verseData;
+        }
+      );
+    }
+  );
   return resultingChapters;
 }
 
-function compareShape(
-  currentUsfmData: any,
-  currentSheldonData: any,
-  i?: number
-) {
-  if (Array.isArray(currentUsfmData) && Array.isArray(currentSheldonData)) {
-    console.log(
-      `  ${(i ?? -1) + 1 ? `${i} ` : ''}${currentUsfmData.length} : ${
-        currentSheldonData.length
-      }`
-    );
-    if (currentUsfmData.length !== currentSheldonData.length) {
-      if (
-        !(
-          currentUsfmData[0] instanceof Object &&
-          currentSheldonData[0] instanceof Array &&
-          typeof currentSheldonData[0][0] === 'string' &&
-          rectifyShape(currentUsfmData, currentSheldonData)
-        )
-      ) {
-        return false;
-      }
-    }
-    for (let i = 0; i < currentUsfmData.length; ++i) {
-      if (!compareShape(currentUsfmData[i], currentSheldonData[i], i)) {
-        // console.log(currentUsfmData[i]);
-        // console.log(currentSheldonData[i]);
-        return false;
-      }
-    }
-    return true;
-  }
+// function compareShape(
+//   currentUsfmData: UsfmWordEntry[][][],
+//   currentSheldonData: ProcessedSheldonWordEntry[][][],
+//   i?: number
+// ) {
+//   if (Array.isArray(currentUsfmData) && Array.isArray(currentSheldonData)) {
+//     console.log(
+//       `  ${(i ?? -1) + 1 ? `${i} ` : ''}${currentUsfmData.length} : ${
+//         currentSheldonData.length
+//       }`
+//     );
+//     if (currentUsfmData.length !== currentSheldonData.length) {
+//       if (
+//         !(
+//           currentUsfmData[0] instanceof Object &&
+//           currentSheldonData[0] instanceof Array &&
+//           typeof currentSheldonData[0][0] === 'string' &&
+//           rectifyShape(currentUsfmData, currentSheldonData)
+//         )
+//       ) {
+//         return false;
+//       }
+//     }
+//     for (let i = 0; i < currentUsfmData.length; ++i) {
+//       if (!compareShape(currentUsfmData[i], currentSheldonData[i], i)) {
+//         // console.log(currentUsfmData[i]);
+//         // console.log(currentSheldonData[i]);
+//         return false;
+//       }
+//     }
+//     return true;
+//   }
 
-  return (
-    Array.isArray(currentSheldonData) &&
-    typeof currentSheldonData[0] === 'string' &&
-    !Array.isArray(currentUsfmData)
-  );
-}
+//   return (
+//     Array.isArray(currentSheldonData) &&
+//     typeof currentSheldonData[0] === 'string' &&
+//     !Array.isArray(currentUsfmData)
+//   );
+// }
 
 function rectifyShape(
   usfmVerse: { type: string; [key: string]: string }[],
@@ -414,11 +514,6 @@ function eStrongToSimple(eStrong: string) {
   return eStrong.replace(/[a-z]/, '');
 }
 
-function suspendSync() {
-  const x = true;
-  while (x);
-}
-
 function rectifyKtivQere({
   sheldonVerse,
   usfmVerse,
@@ -467,81 +562,6 @@ function rectifyKtivQere({
 
 function isSheldonWordKtivQere([word]: string[]): 'Q' | 'K' | false {
   return word.includes('(') ? 'Q' : word.includes('[') ? 'K' : false;
-}
-
-async function extractData(
-  baseData: CommonEntryData[][][],
-  {
-    verseIdTag,
-    from: book,
-    into: { wordData, lemmas },
-  }: {
-    verseIdTag: string;
-    from: Book;
-    into: {
-      wordData: WordDataEntry[];
-      lemmas: { [strong: string]: LemmaDataEntry };
-    };
-  }
-) {
-  const verseData: { id: string; number: number; chapter: number }[] = [];
-  for (let chapterIndex = 0; chapterIndex < baseData.length; chapterIndex++) {
-    const verses = baseData[chapterIndex];
-    const chapterNumber = chapterIndex + 1;
-
-    for (let verseIndex = 0; verseIndex < verses.length; verseIndex++) {
-      const words = verses[verseIndex];
-      const verseNumber = verseIndex + 1;
-
-      const verseId = [
-        // `${verseIdTag}-`,
-        book.id.toString().padStart(2, '0'),
-        chapterNumber.toString().padStart(3, '0'),
-        verseNumber.toString().padStart(3, '0'),
-      ].join('');
-      verseData.push({
-        id: verseId,
-        number: verseNumber,
-        chapter: chapterNumber,
-      });
-
-      for (let wordIndex = 0; wordIndex < words.length; wordIndex++) {
-        const {
-          text,
-          grammar,
-          strong,
-          english = '?',
-        }: {
-          text: string;
-          grammar: string;
-          strong: string;
-          english?: string;
-        } = words[wordIndex];
-
-        const wordId = `${verseId}${(wordIndex + 1)
-          .toString()
-          .padStart(2, '0')}`;
-        wordData.push({
-          id: wordId,
-          text: text.normalize(),
-          verseId: verseId,
-          grammar,
-          strong,
-          english,
-        });
-
-        lemmas[strong] ??= {};
-        lemmas[strong][grammar] ??= { verseIds: [] };
-        lemmas[strong][grammar].verseIds.push(wordId);
-      }
-    }
-  }
-
-  await client.verse.createMany({
-    data: verseData.map((verseDatum) => {
-      return { ...verseDatum, bookId: book.id };
-    }),
-  });
 }
 
 function toCleanSheldonStrongs(arg0: string, arg1: string) {
