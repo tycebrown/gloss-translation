@@ -37,7 +37,6 @@ interface UsfmWordEntry extends CommonEntryData {
 interface UsfmFootnoteEntry extends UsfmWordEntry {
   footnoteType: 'Q' | 'K';
 }
-
 interface LemmaDataEntry {
   [grammar: string]: {
     verseIds: string[];
@@ -47,41 +46,41 @@ interface LemmaDataEntry {
 
 async function run() {
   //------- FOR TESTING -----------
-  // await client.gloss.deleteMany();
-  // await client.word.deleteMany();
-  // await client.verse.deleteMany();
-  // await client.book.deleteMany();
-  // await client.lemmaForm.deleteMany();
-  // await client.lemmaResource.deleteMany();
-  // await client.lemma.deleteMany();
-  // await client.language.deleteMany();
+  await client.gloss.deleteMany();
+  await client.word.deleteMany();
+  await client.verse.deleteMany();
+  await client.book.deleteMany();
+  await client.lemmaForm.deleteMany();
+  await client.lemmaResource.deleteMany();
+  await client.lemma.deleteMany();
+  await client.language.deleteMany();
 
   //-------------------------------
 
   const wordData: WordDataEntry[] = [];
   const lemmas: { [strong: string]: LemmaDataEntry } = {};
-  const verseData: Verse[] = [];
+  const verseData: { [verseId: string]: Verse } = {};
 
   const books: Book[] = await createBooks();
+  console.log(books);
 
   for (const book of books) {
     const sheldonData = parseSheldonData(book);
     const usfmData = parseUsfmData(book);
-    console.log('parsed sheldon data');
-    // const usfmData = parseUsfmData(book);
 
-    await extractData(sheldonData, {
-      verseIdTag: 'S',
-      from: book,
-      into: { wordData, lemmas, verseData },
-    });
-    console.log('extracted sheldon data');
-    await extractData(usfmData, {
-      verseIdTag: 'U',
+    console.log('parsed data');
+    extractData(usfmData, {
+      wordIdTag: 'U',
       from: book,
       into: { wordData, lemmas, verseData },
     });
     console.log('extracted usfm data');
+    extractData(sheldonData, {
+      wordIdTag: 'S',
+      from: book,
+      into: { wordData, lemmas, verseData },
+    });
+    console.log('extracted sheldon data');
   }
 
   console.log('did extracting');
@@ -155,19 +154,19 @@ function toSheldonWordEntries(
   });
 }
 
-async function extractData(
+function extractData(
   baseData: CommonEntryData[][][],
   {
-    verseIdTag,
+    wordIdTag,
     from: book,
     into: { wordData, lemmas, verseData },
   }: {
-    verseIdTag: string;
+    wordIdTag: string;
     from: Book;
     into: {
       wordData: WordDataEntry[];
       lemmas: { [strong: string]: LemmaDataEntry };
-      verseData: Verse[];
+      verseData: { [verseId: string]: Verse };
     };
   }
 ) {
@@ -179,18 +178,13 @@ async function extractData(
       const words = verses[verseIndex];
       const verseNumber = verseIndex + 1;
 
-      const verseId = generateVerseId(
-        verseIdTag,
-        book,
-        chapterNumber,
-        verseNumber
-      );
-      verseData.push({
+      const verseId = generateVerseId(book, chapterNumber, verseNumber);
+      verseData[verseId] ??= {
         id: verseId,
         number: verseNumber,
         chapter: chapterNumber,
         bookId: book.id,
-      });
+      };
 
       for (let wordIndex = 0; wordIndex < words.length; wordIndex++) {
         const {
@@ -205,7 +199,7 @@ async function extractData(
           english?: string;
         } = words[wordIndex];
 
-        const wordId = `${verseId}${(wordIndex + 1)
+        const wordId = `${wordIdTag}-${verseId}${(wordIndex + 1)
           .toString()
           .padStart(2, '0')}`;
         wordData.push({
@@ -226,22 +220,20 @@ async function extractData(
 }
 
 function generateVerseId(
-  verseIdTag: string,
   book: Book,
   chapterNumber: number,
   verseNumber: number
 ) {
   return [
-    `${verseIdTag}-`,
     book.id.toString().padStart(2, '0'),
     chapterNumber.toString().padStart(3, '0'),
     verseNumber.toString().padStart(3, '0'),
   ].join('');
 }
 
-async function createVerses(verseData: Verse[]) {
+async function createVerses(verseData: { [verseId: string]: Verse }) {
   await client.verse.createMany({
-    data: verseData,
+    data: Object.values(verseData),
   });
 }
 
@@ -367,7 +359,9 @@ function parseUsfmData(book: Book) {
       }
     }
   }
-  return flattenChapters(runningAdjustedChapters);
+  return flattenChapters(runningAdjustedChapters)
+    .filter((chapter) => chapter && Object.keys(chapter).length !== 0)
+    .map((chapter) => chapter.filter((verse) => verse && verse.length > 0));
 }
 
 function parseFootnoteContent(content: string): UsfmFootnoteEntry {
