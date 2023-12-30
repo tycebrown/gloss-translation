@@ -6,6 +6,7 @@ import { Icon } from '../../shared/components/Icon';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
 import { parseVerseId } from './verse-utils';
 import DOMPurify from 'dompurify';
+import { ReactNode, createContext, useState } from 'react';
 
 type TranslationSidebarProps = {
   language: string;
@@ -23,17 +24,6 @@ export const TranslationSidebar = ({
   const word = verse.words[wordIndex];
   const { bookId } = parseVerseId(verse.id);
   const isHebrew = bookId < 40;
-  const lemmaResourcesQuery = useQuery(
-    ['verse-lemma-resources', language, verse.id],
-    () => apiClient.verses.findLemmaResources(verse.id)
-  );
-  const resources = lemmaResourcesQuery.isSuccess
-    ? lemmaResourcesQuery.data.data[word.lemmaId]
-    : [];
-  const lexiconResource = resources.find(({ resource }) =>
-    ['BDB', 'LSJ'].includes(resource)
-  );
-  const lexiconEntry = lexiconResource?.entry ?? '';
   const { t } = useTranslation(['common', 'translate']);
   return (
     <div
@@ -55,26 +45,89 @@ export const TranslationSidebar = ({
         </span>
         <span>{word.lemmaId}</span>
       </div>
-      <div className="overflow-y-auto grow">
-        {lemmaResourcesQuery.isLoading && (
-          <div className="h-full w-full flex items-center justify-center">
-            <LoadingSpinner />
-          </div>
-        )}
-        {lemmaResourcesQuery.isSuccess && lexiconEntry && (
-          <div>
-            <div className="text-lg mb-3 font-bold me-2">
-              {lexiconResource?.resource}
-            </div>
-            <div
-              className="leading-7"
-              dangerouslySetInnerHTML={{
-                __html: DOMPurify.sanitize(lexiconEntry),
-              }}
-            />
-          </div>
-        )}
-      </div>
+      <Tabs language={language} verse={verse} word={word} />
     </div>
   );
 };
+
+function P({
+  language,
+  verse,
+  word,
+}: {
+  language: any;
+  verse: any;
+  word: any;
+}) {
+  const lemmaResourcesQuery = useQuery(
+    ['verse-lemma-resources', language, verse.id],
+    () => apiClient.verses.findLemmaResources(verse.id)
+  );
+  const resources = lemmaResourcesQuery.isSuccess
+    ? lemmaResourcesQuery.data.data[word.lemmaId]
+    : [];
+  const lexiconResource = resources.find(({ resource }) =>
+    ['BDB', 'LSJ'].includes(resource)
+  );
+  const lexiconEntry = lexiconResource?.entry ?? '';
+  return (
+    <div className="overflow-y-auto grow">
+      {lemmaResourcesQuery.isLoading && (
+        <div className="h-full w-full flex items-center justify-center">
+          <LoadingSpinner />
+        </div>
+      )}
+      {lemmaResourcesQuery.isSuccess && lexiconEntry && (
+        <div>
+          <div className="text-lg mb-3 font-bold me-2">
+            {lexiconResource?.resource}
+          </div>
+          <div
+            className="leading-7"
+            dangerouslySetInnerHTML={{
+              __html: DOMPurify.sanitize(lexiconEntry),
+            }}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Tabs({
+  language,
+  verse,
+  word,
+}: {
+  language: any;
+  verse: any;
+  word: any;
+}) {
+  const tabs = [
+    { title: 'BDB', content: <h1>BDB content</h1> },
+    { title: 'Strongs', content: <h1>Strongs content</h1> },
+    { title: 'Usage', content: <h1>Usage content</h1> },
+    { title: 'Chapter', content: <h1>Chapter content</h1> },
+    { title: 'Comments', content: <h1>Comments content</h1> },
+  ];
+  const [activeTab, setActiveTab] = useState(0);
+
+  return (
+    <>
+      <div className="flex flex-row gap-1 text-sm [&>*]:px-1 [&>*]:border-2 rounded-3xl">
+        {tabs.map(({ title }, i) => (
+          <div
+            className={`select-none ${
+              activeTab === i ? 'bg-white' : 'bg-gray-300'
+            }`}
+            onClick={() => setActiveTab(i)}
+          >
+            {title}
+          </div>
+        ))}
+      </div>
+      {tabs[activeTab].content}
+      {/* <P language={language} verse={verse} word={word}></P> */}
+    </>
+  );
+}
