@@ -40,7 +40,7 @@ export const TranslationSidebar = ({
       <div
         className="
         border-t h-[320px] flex flex-col gap-4 pt-3 flex-shrink-0
-        md:border-t-0 md:ltr:border-l md:rtl:border-r md:h-auto md:w-1/3 md:min-w-[320px] md:max-w-[480px] md:pt-0
+        md:border-t-0 md:ltr:border-l md:rtl:border-r md:h-auto md:w-1/3 md:min-w-[360px] md:max-w-[480px] md:pt-0
       "
       >
         <div className="md:ps-3">
@@ -60,28 +60,28 @@ export const TranslationSidebar = ({
             <span>{word.lemmaId}</span>
           </div>
         </div>
-        <Tabs />
+        <SidePanelTabs />
       </div>
     </TranslationContext.Provider>
   );
 };
 
-function Tabs() {
-  const tabs = [
-    { title: 'BDB', buildContent: () => <BDBTab /> },
-    { title: 'Strongs', buildContent: () => <StrongsTab /> },
-    { title: 'Usage', buildContent: () => <UsageTab /> },
-    { title: 'Chapter', buildContent: () => <ChapterTab /> },
-    { title: 'Comments', buildContent: () => <CommentsTab /> },
-  ];
-  const [activeTab, setActiveTab] = useState(0);
+const tabs = [
+  { title: 'BDB', buildContent: () => <BDBTab /> },
+  { title: 'Strongs', buildContent: () => <StrongsTab /> },
+  { title: 'Usage', buildContent: () => <UsageTab /> },
+  { title: 'Chapter', buildContent: () => <ChapterTab /> },
+  { title: 'Comments', buildContent: () => <CommentsTab /> },
+];
 
+function SidePanelTabs() {
+  const [activeTab, setActiveTab] = useState(0);
   return (
     <>
-      <div className="flex flex-row gap-1 text-sm border-b-2 ps-1">
+      <div className="flex flex-row gap-x-0.5 xl:text-base md:text-sm border-b-2 ps-1">
         {tabs.map(({ title }, i) => (
           <div
-            className={`select-none px-1 border-t-2 rounded-t-lg border-x-2 relative ${
+            className={`select-none px-2 py-1 border-t-2 rounded-t border-x-2 relative ${
               activeTab === i ? 'bg-white top-0.5' : 'bg-gray-300'
             }`}
             onClick={() => setActiveTab(i)}
@@ -90,7 +90,7 @@ function Tabs() {
           </div>
         ))}
       </div>
-      <div className="overflow-y-auto grow md:ps-3">
+      <div className="overflow-y-auto grow md:px-3">
         {tabs[activeTab].buildContent()}
       </div>
     </>
@@ -136,7 +136,52 @@ function BDBTab() {
 
 function StrongsTab() {
   const { language, verse, word } = useContext(TranslationContext)!;
-  return <h1>Strongs content</h1>;
+  return (
+    <>
+      <h1 className="mb-3 text-lg font-bold me-2">Strongs content</h1>
+      <p>
+        Lorem ipsum, dolor sit amet consectetur adipisicing elit. Ex iure fugit
+        sequi dolore autem laboriosam adipisci consectetur vero eius quod?
+        Ratione veritatis quam esse perspiciatis maiores eveniet sint iusto
+        atque? Lorem ipsum dolor sit amet consectetur adipisicing elit. Quis
+        sapiente reprehenderit officiis tempore nostrum cupiditate, nemo quae
+        qui consectetur dignissimos rerum consequatur beatae natus ea totam
+        voluptatum autem hic dolores. Lorem ipsum, dolor sit amet consectetur
+        adipisicing elit. Ex iure fugit sequi dolore autem laboriosam adipisci
+        consectetur vero eius quod? Ratione veritatis quam esse perspiciatis
+        maiores eveniet sint iusto atque? Lorem ipsum dolor sit amet consectetur
+        adipisicing elit. Quis sapiente reprehenderit officiis tempore nostrum
+        cupiditate, nemo quae qui consectetur dignissimos rerum consequatur
+        beatae natus ea totam voluptatum autem hic dolores. Lorem ipsum, dolor
+        sit amet consectetur adipisicing elit. Ex iure fugit sequi dolore autem
+        laboriosam adipisci consectetur vero eius quod? Ratione veritatis quam
+        esse perspiciatis maiores eveniet sint iusto atque? Lorem ipsum dolor
+        sit amet consectetur adipisicing elit. Quis sapiente reprehenderit
+        officiis tempore nostrum cupiditate, nemo quae qui consectetur
+        dignissimos rerum consequatur beatae natus ea totam voluptatum autem hic
+        dolores. Lorem ipsum, dolor sit amet consectetur adipisicing elit. Ex
+        iure fugit sequi dolore autem laboriosam adipisci consectetur vero eius
+        quod? Ratione veritatis quam esse perspiciatis maiores eveniet sint
+        iusto atque? Lorem ipsum dolor sit amet consectetur adipisicing elit.
+        Quis sapiente reprehenderit officiis tempore nostrum cupiditate, nemo
+        quae qui consectetur dignissimos rerum consequatur beatae natus ea totam
+        voluptatum autem hic dolores. Lorem ipsum, dolor sit amet consectetur
+        adipisicing elit. Ex iure fugit sequi dolore autem laboriosam adipisci
+        consectetur vero eius quod? Ratione veritatis quam esse perspiciatis
+        maiores eveniet sint iusto atque? Lorem ipsum dolor sit amet consectetur
+        adipisicing elit. Quis sapiente reprehenderit officiis tempore nostrum
+        cupiditate, nemo quae qui consectetur dignissimos rerum consequatur
+        beatae natus ea totam voluptatum autem hic dolores. Lorem ipsum, dolor
+        sit amet consectetur adipisicing elit. Ex iure fugit sequi dolore autem
+        laboriosam adipisci consectetur vero eius quod? Ratione veritatis quam
+        esse perspiciatis maiores eveniet sint iusto atque? Lorem ipsum dolor
+        sit amet consectetur adipisicing elit. Quis sapiente reprehenderit
+        officiis tempore nostrum cupiditate, nemo quae qui consectetur
+        dignissimos rerum consequatur beatae natus ea totam voluptatum autem hic
+        dolores.
+      </p>
+    </>
+  );
 }
 
 function UsageTab() {
