@@ -65,7 +65,7 @@ type TabData = {
 
 const sidePanelTabs: TabData[] = [
   { title: 'Lexicon', buildContent: (props) => <LexiconTab {...props} /> },
-  { title: 'Strongs', buildContent: (props) => <StrongsTab {...props} /> },
+  { title: 'Notes', buildContent: (props) => <NotesTab {...props} /> },
   { title: 'Usage', buildContent: (props) => <UsageTab {...props} /> },
   { title: 'Chapter', buildContent: (props) => <ChapterTab {...props} /> },
   { title: 'Comments', buildContent: (props) => <CommentsTab {...props} /> },
@@ -130,8 +130,8 @@ function LexiconTab({ language, verse, word }: TabProps) {
   );
 }
 
-function StrongsTab({ language, verse, word }: TabProps) {
-  return <h1>Strongs content</h1>;
+function NotesTab({ language, verse, word }: TabProps) {
+  return <h1>NOtes content</h1>;
 }
 
 function UsageTab({ language, verse, word }: TabProps) {
