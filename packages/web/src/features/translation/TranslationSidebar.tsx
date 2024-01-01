@@ -43,11 +43,11 @@ export const TranslationSidebar = ({
         md:border-t-0 md:ltr:border-l md:rtl:border-r md:h-auto md:w-1/3 md:min-w-[360px] md:max-w-[480px] md:pt-0
       "
       >
-        <div className="md:ps-3">
+        <div className="ps-4">
           <div className="flex flex-row items-center gap-4">
             <button onClick={onClose} type="button">
-              <Icon icon="chevron-down" className="block sm:hidden" />
-              <Icon icon="chevron-right" className="hidden sm:block" />
+              <Icon icon="chevron-down" className="block md:hidden" />
+              <Icon icon="chevron-right" className="hidden md:block" />
               <span className="sr-only">{t('common:close')}</span>
             </button>
             <span
@@ -90,7 +90,7 @@ function SidePanelTabs() {
           </div>
         ))}
       </div>
-      <div className="overflow-y-auto grow md:px-3">
+      <div className="px-4 overflow-y-auto grow ">
         {tabs[activeTab].buildContent()}
       </div>
     </>
