@@ -6,7 +6,8 @@ import { Icon } from '../../shared/components/Icon';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
 import { parseVerseId } from './verse-utils';
 import DOMPurify from 'dompurify';
-import { ReactNode, useState } from 'react';
+import { Fragment, ReactNode, useState } from 'react';
+import { Tab } from '@headlessui/react';
 
 type TranslationSidebarProps = {
   language: string;
@@ -14,6 +15,25 @@ type TranslationSidebarProps = {
   wordIndex: number;
   onClose: () => void;
 };
+
+type TabProps = {
+  language: string;
+  verse: Verse;
+  word: VerseWord;
+};
+
+type TabData = {
+  title: string;
+  content: (props: TabProps) => ReactNode;
+};
+
+const sidePanelTabs: TabData[] = [
+  { title: 'Lexicon', content: LexiconTab },
+  { title: 'Strongs', content: StrongsTab },
+  { title: 'Usage', content: UsageTab },
+  { title: 'Chapter', content: ChapterTab },
+  { title: 'Comments', content: CommentsTab },
+];
 
 export const TranslationSidebar = ({
   language,
@@ -47,52 +67,30 @@ export const TranslationSidebar = ({
           <span>{word.lemmaId}</span>
         </div>
       </div>
-      <SidePanelTabs language={language} verse={verse} word={word} />
+      <Tab.Group>
+        <div>
+          <Tab.List className="flex flex-row gap-x-0.5 ps-1">
+            {sidePanelTabs.map(({ title }) => (
+              <Tab className="md:text-sm xl:text-base text-base select-none px-2 py-1 border-t-2 rounded-t-md border-x-2 relative ui-selected:bg-white ui-selected:top-0.5 bg-gray-300 outline-none">
+                {title}
+              </Tab>
+            ))}
+          </Tab.List>
+          <div className="border-t-2"></div>
+        </div>
+        <div className="px-4 overflow-y-scroll grow">
+          <Tab.Panels>
+            {sidePanelTabs.map((tab) => (
+              <Tab.Panel>
+                <tab.content language={language} verse={verse} word={word} />
+              </Tab.Panel>
+            ))}
+          </Tab.Panels>
+        </div>
+      </Tab.Group>
     </div>
   );
 };
-
-type TabProps = {
-  language: string;
-  verse: Verse;
-  word: VerseWord;
-};
-
-type TabData = {
-  title: string;
-  buildContent: (props: TabProps) => ReactNode;
-};
-
-const sidePanelTabs: TabData[] = [
-  { title: 'Lexicon', buildContent: (props) => <LexiconTab {...props} /> },
-  { title: 'Strongs', buildContent: (props) => <StrongsTab {...props} /> },
-  { title: 'Usage', buildContent: (props) => <UsageTab {...props} /> },
-  { title: 'Chapter', buildContent: (props) => <ChapterTab {...props} /> },
-  { title: 'Comments', buildContent: (props) => <CommentsTab {...props} /> },
-];
-
-function SidePanelTabs(props: TabProps) {
-  const [activeTab, setActiveTab] = useState(0);
-  return (
-    <>
-      <ol className="flex flex-row gap-x-0.5 xl:text-base md:text-sm border-b-2 ps-1">
-        {sidePanelTabs.map(({ title }, i) => (
-          <li
-            className={`select-none px-2 py-1 border-t-2 rounded-t border-x-2 relative ${
-              activeTab === i ? 'bg-white top-0.5' : 'bg-gray-300'
-            }`}
-            onClick={() => setActiveTab(i)}
-          >
-            {title}
-          </li>
-        ))}
-      </ol>
-      <div className="px-4 overflow-y-auto grow">
-        {sidePanelTabs[activeTab].buildContent(props)}
-      </div>
-    </>
-  );
-}
 
 function LexiconTab({ language, verse, word }: TabProps) {
   const lemmaResourcesQuery = useQuery(
@@ -107,7 +105,7 @@ function LexiconTab({ language, verse, word }: TabProps) {
   );
   const lexiconEntry = lexiconResource?.entry ?? '';
   return (
-    <div className="">
+    <>
       {lemmaResourcesQuery.isLoading && (
         <div className="flex items-center justify-center w-full h-full">
           <LoadingSpinner />
@@ -126,7 +124,7 @@ function LexiconTab({ language, verse, word }: TabProps) {
           />
         </div>
       )}
-    </div>
+    </>
   );
 }
 
