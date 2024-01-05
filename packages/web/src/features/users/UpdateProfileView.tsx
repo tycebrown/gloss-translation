@@ -13,6 +13,7 @@ import SubmittingIndicator from '../../shared/components/form/SubmittingIndicato
 import { useFlash } from '../../shared/hooks/flash';
 import useAuth from '../../shared/hooks/useAuth';
 import { useEffect } from 'react';
+import { RichTextEditor } from '../../shared/components/RichTextEditor';
 
 interface FormData {
   email: string;
@@ -64,10 +65,14 @@ export default function UpdateProfileView() {
   if (!user) return null;
 
   return (
-    <View fitToScreen className="flex justify-center items-start">
-      <Card className="mx-4 mt-4 w-96 flex-shrink p-6">
+    <View fitToScreen className="flex items-start justify-center">
+      <Card className="flex-shrink p-6 mx-4 mt-4 w-96">
         <ViewTitle>{t('users:update_profile')}</ViewTitle>
         <Form context={formContext} onSubmit={onSubmit}>
+          <div className="mb-2">
+            <FormLabel>TEST</FormLabel>
+            <RichTextEditor />
+          </div>
           <div className="mb-2">
             <FormLabel htmlFor="email">
               {t('users:email').toUpperCase()}
