@@ -15,7 +15,11 @@ import ListItem from '@tiptap/extension-list-item';
 import BulletList from '@tiptap/extension-bullet-list';
 import OrderedList from '@tiptap/extension-ordered-list';
 
-export function RichTextEditor() {
+export function RichTextEditor({
+  onUpdate,
+}: {
+  onUpdate?: (newValue: string) => void;
+}) {
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -31,13 +35,14 @@ export function RichTextEditor() {
         },
       }),
     ],
-    content: '<ul><li><strong>Hello World</strong></li></ul>',
     editorProps: {
       attributes: {
         class: 'p-2 outline-none',
       },
     },
+    onUpdate: ({ editor }) => onUpdate?.(editor.getHTML()),
   });
+
   return (
     <div className="border border-gray-400 rounded focus-within:outline focus-within:outline-blue-700">
       <div className="flex flex-row gap-4 p-2 border-b border-gray-400">

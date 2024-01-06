@@ -12,8 +12,9 @@ import Button from '../../shared/components/actions/Button';
 import SubmittingIndicator from '../../shared/components/form/SubmittingIndicator';
 import { useFlash } from '../../shared/hooks/flash';
 import useAuth from '../../shared/hooks/useAuth';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { RichTextEditor } from '../../shared/components/RichTextEditor';
+import { RichText } from '../../shared/components/RichText';
 
 interface FormData {
   email: string;
@@ -62,6 +63,8 @@ export default function UpdateProfileView() {
     }
   };
 
+  // for testing
+  const [richText, setRichText] = useState('');
   if (!user) return null;
 
   return (
@@ -71,7 +74,8 @@ export default function UpdateProfileView() {
         <Form context={formContext} onSubmit={onSubmit}>
           <div className="mb-2">
             <FormLabel>TEST</FormLabel>
-            <RichTextEditor />
+            <RichTextEditor onUpdate={setRichText} />
+            <RichText content={richText} />
           </div>
           <div className="mb-2">
             <FormLabel htmlFor="email">
