@@ -1,5 +1,4 @@
 import DOMPurify from 'dompurify';
-import { EditorView } from 'prosemirror-view';
 
 export function RichText({ content }: { content: string }) {
   return (

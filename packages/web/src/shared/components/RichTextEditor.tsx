@@ -118,7 +118,7 @@ function MenuButton({
         isStyleActive ? 'bg-gray-300' : ''
       }`}
     >
-      <FontAwesomeIcon icon={icon}></FontAwesomeIcon>
+      <FontAwesomeIcon icon={icon} />
     </button>
   );
 }
