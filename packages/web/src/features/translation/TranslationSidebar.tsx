@@ -107,7 +107,7 @@ function LexiconTab({ language, verse, word }: TabProps) {
   );
   const lexiconEntry = lexiconResource?.entry ?? '';
   return (
-    <div className="">
+    <>
       {lemmaResourcesQuery.isLoading && (
         <div className="flex items-center justify-center w-full h-full">
           <LoadingSpinner />
@@ -126,7 +126,7 @@ function LexiconTab({ language, verse, word }: TabProps) {
           />
         </div>
       )}
-    </div>
+    </>
   );
 }
 
