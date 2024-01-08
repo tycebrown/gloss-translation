@@ -1,4 +1,9 @@
-import { useQuery } from '@tanstack/react-query';
+import {
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { Verse, VerseWord } from '@translation/api-types';
 import { useTranslation } from 'react-i18next';
 import apiClient from '../../shared/apiClient';
@@ -8,6 +13,8 @@ import { parseVerseId } from './verse-utils';
 import DOMPurify from 'dompurify';
 import { Fragment, ReactNode, useState } from 'react';
 import { Tab } from '@headlessui/react';
+import Button from '../../shared/components/actions/Button';
+import { faPlus } from '@fortawesome/free-solid-svg-icons';
 
 type TranslationSidebarProps = {
   language: string;
@@ -29,7 +36,7 @@ type TabData = {
 
 const sidePanelTabs: TabData[] = [
   { title: 'Lexicon', content: LexiconTab },
-  { title: 'Strongs', content: StrongsTab },
+  { title: 'Notes', content: NotesTab },
   { title: 'Usage', content: UsageTab },
   { title: 'Chapter', content: ChapterTab },
   { title: 'Comments', content: CommentsTab },
@@ -128,8 +135,8 @@ function LexiconTab({ language, verse, word }: TabProps) {
   );
 }
 
-function StrongsTab({ language, verse, word }: TabProps) {
-  return <h1>Strongs content</h1>;
+function NotesTab({ language, verse, word }: TabProps) {
+  return <h1>Notes content</h1>;
 }
 
 function UsageTab({ language, verse, word }: TabProps) {
@@ -140,6 +147,137 @@ function ChapterTab({ language, verse, word }: TabProps) {
   return <h1>Chapter content</h1>;
 }
 
+type CommentThread = {
+  id: number;
+  author: string;
+  body: string;
+  timestamp: string;
+  resolved: boolean;
+  replies: CommentReply[];
+};
+type CommentReply = {
+  id: number;
+  author: string;
+  body: string;
+  timestamp: string;
+};
+const comments: CommentThread[] = [
+  {
+    id: 0,
+    author: 'Andrew Case',
+    body: 'Lorem ipsum, dolor sit amet consectetur adipisicing elit. Officiis, mollitia vero voluptate tempora in, aut sed iusto molestiae deleniti corrupti sapiente quae a dolore harum tempore numquam. Maxime, dolore optio?',
+    timestamp: new Date().toISOString(),
+    resolved: false,
+    replies: [
+      {
+        id: 0,
+        author: 'Addison Emig',
+        body: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Sed, ut quo. Minima aspernatur id blanditiis doloremque incidunt. Est nulla error voluptates distinctio vero doloremque, molestiae, nobis deleniti numquam esse adipisci.',
+        timestamp: new Date().toISOString(),
+      },
+      {
+        id: 1,
+        author: 'Adrian Rocke',
+        body: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Sed, ut quo. Minima aspernatur id blanditiis doloremque incidunt. Est nulla error voluptates distinctio vero doloremque, molestiae, nobis deleniti numquam esse adipisci.',
+        timestamp: new Date().toISOString(),
+      },
+    ],
+  },
+];
+
 function CommentsTab({ language, verse, word }: TabProps) {
-  return <h1>Comments content</h1>;
+  const queryClient = useQueryClient();
+  const commentQueries = useQueries({
+    queries: comments.map(({ id }) => {
+      return { queryKey: ['comment', id], queryFn: async () => comments[id] };
+    }),
+  });
+
+  return (
+    <>
+      <div className="mb-4">
+        <Button className="text-sm">
+          <Icon icon="plus" /> Comment
+        </Button>
+      </div>
+      <ol>
+        {commentQueries.map(
+          ({ data: comment }) =>
+            comment && (
+              <li key={comment.id}>
+                <CommentThreadView comment={comment} />
+              </li>
+            )
+        )}
+      </ol>
+    </>
+  );
+}
+
+function CommentThreadView({ comment }: { comment: CommentThread }) {
+  const [isViewOpen, setIsViewOpen] = useState(false);
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex flex-col px-3 py-2 border border-black gap-1.5 rounded-xl">
+        <div className="flex flex-row justify-between">
+          <div className="font-bold">
+            <button className="px-2" onClick={() => setIsViewOpen(!isViewOpen)}>
+              <Icon icon={isViewOpen ? 'caret-up' : 'caret-down'} />
+            </button>
+            {comment.author}
+          </div>
+          <div className="text-sm">
+            {new Date(comment.timestamp).toLocaleDateString('en-US', {
+              hour12: true,
+              hour: 'numeric',
+              minute: 'numeric',
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric',
+            })}
+          </div>
+        </div>
+        <p>{comment.body}</p>
+        <div className="flex flex-row gap-2">
+          <button className="font-bold">
+            <Icon icon="check" /> Resolve
+          </button>
+          <button className="font-bold">
+            <Icon icon="reply" /> Reply
+          </button>
+        </div>
+      </div>
+      {isViewOpen && (
+        <>
+          <ol className="flex flex-col gap-1">
+            {comment.replies.map((reply) => (
+              <li key={reply.id}>
+                <div className="flex flex-col px-3 py-2 border border-black gap-1.5 rounded-xl ml-8">
+                  <div className="flex flex-row justify-between">
+                    <div className="font-bold">{comment.author}</div>
+                    <div className="text-sm">
+                      {new Date(comment.timestamp).toLocaleDateString('en-US', {
+                        hour12: true,
+                        hour: 'numeric',
+                        minute: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                      })}
+                    </div>
+                  </div>
+                  <p>{comment.body}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+          <div>
+            <button className="ml-12 font-bold">
+              <Icon icon="reply" /> Reply
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
 }
