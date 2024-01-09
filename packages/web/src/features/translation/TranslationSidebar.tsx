@@ -11,10 +11,17 @@ import { Icon } from '../../shared/components/Icon';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
 import { parseVerseId } from './verse-utils';
 import DOMPurify from 'dompurify';
-import { Fragment, ReactNode, useState } from 'react';
+import {
+  Fragment,
+  ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { Tab } from '@headlessui/react';
 import Button from '../../shared/components/actions/Button';
-import { faPlus } from '@fortawesome/free-solid-svg-icons';
+import RichTextInput from '../../shared/components/form/RichTextInput';
 
 type TranslationSidebarProps = {
   language: string;
@@ -195,10 +202,8 @@ function CommentsTab({ language, verse, word }: TabProps) {
 
   return (
     <>
-      <div className="mb-4">
-        <Button className="text-sm">
-          <Icon icon="plus" /> Comment
-        </Button>
+      <div className="mt-1 mb-4">
+        <AddCommentsView />
       </div>
       <ol>
         {commentQueries.map(
@@ -212,13 +217,52 @@ function CommentsTab({ language, verse, word }: TabProps) {
       </ol>
     </>
   );
+
+  function AddCommentsView() {
+    const [isAddingComment, setIsAddingComment] = useState(false);
+    const [shouldAutoFocus, setShouldAutoFocus] = useState(true);
+    const inputRef = useCallback(
+      (inputElement: HTMLInputElement) => {
+        if (shouldAutoFocus) inputElement?.focus();
+      },
+      [shouldAutoFocus]
+    );
+
+    return (
+      <>
+        <Button
+          className={`${isAddingComment ? 'mb-4' : ''} text-sm`}
+          disabled={isAddingComment}
+          onClick={() => setIsAddingComment(!isAddingComment)}
+        >
+          <Icon icon="plus" /> Comment
+        </Button>
+        {isAddingComment && (
+          <>
+            <RichTextInput
+              onBlur={() => setShouldAutoFocus(false)}
+              ref={inputRef}
+              name="commentInput"
+            />
+            <div className="h-2" />
+            <div className="flex flex-row justify-end gap-3">
+              <button>Cancel</button>
+              <Button className="text-sm font-bold">
+                <Icon icon="comment" /> Submit
+              </Button>
+            </div>
+          </>
+        )}
+      </>
+    );
+  }
 }
 
 function CommentThreadView({ comment }: { comment: CommentThread }) {
   const [isViewOpen, setIsViewOpen] = useState(false);
   return (
     <div className="flex flex-col gap-1">
-      <div className="flex flex-col px-3 py-2 border border-black gap-1.5 rounded-xl">
+      <div className="flex flex-col px-3 py-2 border border-slate-400 gap-1.5 rounded">
         <div className="flex flex-row justify-between">
           <div className="font-bold">
             <button className="px-2" onClick={() => setIsViewOpen(!isViewOpen)}>
@@ -252,7 +296,7 @@ function CommentThreadView({ comment }: { comment: CommentThread }) {
           <ol className="flex flex-col gap-1">
             {comment.replies.map((reply) => (
               <li key={reply.id}>
-                <div className="flex flex-col px-3 py-2 border border-black gap-1.5 rounded-xl ml-8">
+                <div className="flex flex-col px-3 py-2 border border-slate-400 gap-1.5 rounded ml-8">
                   <div className="flex flex-row justify-between">
                     <div className="font-bold">{comment.author}</div>
                     <div className="text-sm">

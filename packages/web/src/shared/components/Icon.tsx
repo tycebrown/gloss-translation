@@ -15,6 +15,7 @@ library.add(
   FaSolid.faPlus,
   FaSolid.faCheck,
   FaSolid.faReply,
+  FaSolid.faComment,
   FaSolid.faCaretUp,
   FaSolid.faCaretDown,
   FaSolid.faArrowsRotate,
