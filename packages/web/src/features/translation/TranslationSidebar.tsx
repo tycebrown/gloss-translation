@@ -1,9 +1,4 @@
-import {
-  useMutation,
-  useQueries,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Verse, VerseWord } from '@translation/api-types';
 import { useTranslation } from 'react-i18next';
 import apiClient from '../../shared/apiClient';
@@ -22,6 +17,7 @@ import {
 import { Tab } from '@headlessui/react';
 import Button from '../../shared/components/actions/Button';
 import RichTextInput from '../../shared/components/form/RichTextInput';
+import RichText from '../../shared/components/RichText';
 
 type TranslationSidebarProps = {
   language: string;
@@ -95,7 +91,7 @@ export const TranslationSidebar = ({
         <div className="px-4 overflow-y-scroll grow">
           <Tab.Panels>
             {sidePanelTabs.map((tab) => (
-              <Tab.Panel>
+              <Tab.Panel key={tab.title}>
                 <tab.content language={language} verse={verse} word={word} />
               </Tab.Panel>
             ))}
@@ -194,60 +190,99 @@ const comments: CommentThread[] = [
 
 function CommentsTab({ language, verse, word }: TabProps) {
   const queryClient = useQueryClient();
-  const commentQueries = useQueries({
-    queries: comments.map(({ id }) => {
-      return { queryKey: ['comment', id], queryFn: async () => comments[id] };
-    }),
+  const commentsQuery = useQuery({
+    queryKey: ['comments'],
+    queryFn: async () => {
+      console.log('invalid');
+      return [...comments];
+    },
+  });
+
+  const { mutate: createComment } = useMutation({
+    mutationFn: async (body: string) => {
+      comments.push({
+        resolved: false,
+        replies: [],
+        body,
+        timestamp: new Date().toISOString(),
+        author: 'Tyce Brown',
+        id:
+          comments
+            .map(({ id }) => id)
+            .reduce(
+              (runningMaxId, currentId) =>
+                currentId > runningMaxId ? currentId : runningMaxId,
+              -1
+            ) + 1,
+      });
+      console.log(
+        comments
+          .map(({ id }) => id)
+          .reduce(
+            (runningMaxId, currentId) =>
+              currentId > runningMaxId ? currentId : runningMaxId,
+            -1
+          ) + 1
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['comments']);
+    },
   });
 
   return (
     <>
       <div className="mt-1 mb-4">
-        <AddCommentsView />
+        <AddCommentsView createComment={createComment} />
       </div>
       <ol>
-        {commentQueries.map(
-          ({ data: comment }) =>
-            comment && (
-              <li key={comment.id}>
-                <CommentThreadView comment={comment} />
-              </li>
-            )
-        )}
+        {commentsQuery.data?.map((comment) => (
+          <li key={comment.id}>
+            <CommentThreadView comment={comment} />
+          </li>
+        ))}
       </ol>
     </>
   );
 
-  function AddCommentsView() {
+  function AddCommentsView({
+    createComment,
+  }: {
+    createComment: (body: string) => void;
+  }) {
     const [isAddingComment, setIsAddingComment] = useState(false);
-    const [shouldAutoFocus, setShouldAutoFocus] = useState(true);
-    const inputRef = useCallback(
-      (inputElement: HTMLInputElement) => {
-        if (shouldAutoFocus) inputElement?.focus();
-      },
-      [shouldAutoFocus]
-    );
+    const inputRef = useRef<HTMLInputElement>(null);
 
     return (
       <>
         <Button
           className={`${isAddingComment ? 'mb-4' : ''} text-sm`}
           disabled={isAddingComment}
-          onClick={() => setIsAddingComment(!isAddingComment)}
+          onClick={() => {
+            setIsAddingComment(true);
+          }}
         >
           <Icon icon="plus" /> Comment
         </Button>
         {isAddingComment && (
           <>
-            <RichTextInput
-              onBlur={() => setShouldAutoFocus(false)}
-              ref={inputRef}
-              name="commentInput"
-            />
+            <RichTextInput ref={inputRef} name="commentInput" />
             <div className="h-2" />
             <div className="flex flex-row justify-end gap-3">
-              <button>Cancel</button>
-              <Button className="text-sm font-bold">
+              <button
+                onClick={() => {
+                  setIsAddingComment(false);
+                }}
+              >
+                Discard
+              </button>
+              <Button
+                className="text-sm font-bold"
+                onClick={() => {
+                  console.log('WHOOOOO!');
+                  createComment(inputRef.current?.value ?? '');
+                }}
+              >
                 <Icon icon="comment" /> Submit
               </Button>
             </div>
@@ -281,7 +316,7 @@ function CommentThreadView({ comment }: { comment: CommentThread }) {
             })}
           </div>
         </div>
-        <p>{comment.body}</p>
+        <RichText content={comment.body} />
         <div className="flex flex-row gap-2">
           <button className="font-bold">
             <Icon icon="check" /> Resolve
@@ -310,7 +345,7 @@ function CommentThreadView({ comment }: { comment: CommentThread }) {
                       })}
                     </div>
                   </div>
-                  <p>{comment.body}</p>
+                  <RichText content={comment.body} />
                 </div>
               </li>
             ))}
