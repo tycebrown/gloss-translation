@@ -251,43 +251,34 @@ function CommentsTab({ language, verse, word }: TabProps) {
     createComment: (body: string) => void;
   }) {
     const [isAddingComment, setIsAddingComment] = useState(false);
-    const inputRef = useRef<HTMLInputElement>(null);
+    const inputRef = useRef<HTMLInputElement | null>(null);
+    useEffect(() => {
+      inputRef.current?.focus();
+    }, [isAddingComment]);
 
     return (
       <>
         <Button
           className={`${isAddingComment ? 'mb-4' : ''} text-sm`}
           disabled={isAddingComment}
-          onClick={() => {
-            setIsAddingComment(true);
-          }}
+          onClick={() => setIsAddingComment(true)}
         >
           <Icon icon="plus" /> Comment
         </Button>
-        {isAddingComment && (
-          <>
-            <RichTextInput ref={inputRef} name="commentInput" />
-            <div className="h-2" />
-            <div className="flex flex-row justify-end gap-3">
-              <button
-                onClick={() => {
-                  setIsAddingComment(false);
-                }}
-              >
-                Discard
-              </button>
-              <Button
-                className="text-sm font-bold"
-                onClick={() => {
-                  console.log('WHOOOOO!');
-                  createComment(inputRef.current?.value ?? '');
-                }}
-              >
-                <Icon icon="comment" /> Submit
-              </Button>
-            </div>
-          </>
-        )}
+
+        <div className={!isAddingComment ? 'hidden' : ''}>
+          <RichTextInput ref={inputRef} name="commentInput" />
+          <div className="h-2" />
+          <div className="flex flex-row justify-end gap-3">
+            <button onClick={() => setIsAddingComment(false)}>Discard</button>
+            <Button
+              className="text-sm font-bold"
+              onClick={() => createComment(inputRef.current?.value ?? '')}
+            >
+              <Icon icon="comment" /> Submit
+            </Button>
+          </div>
+        </div>
       </>
     );
   }
