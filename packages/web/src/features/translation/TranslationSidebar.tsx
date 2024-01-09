@@ -194,12 +194,23 @@ function CommentsTab({ language, verse, word }: TabProps) {
     queryKey: ['comments'],
     queryFn: async () => {
       console.log('invalid');
-      return [...comments];
+      return comments;
     },
   });
 
   const { mutate: createComment } = useMutation({
     mutationFn: async (body: string) => {
+      console.log(comments.map(({ id, author }) => `${id}: ${author}`));
+
+      console.log(
+        comments
+          .map(({ id }) => id)
+          .reduce(
+            (runningMaxId, currentId) =>
+              currentId > runningMaxId ? currentId : runningMaxId,
+            -1
+          ) + 1
+      );
       comments.push({
         resolved: false,
         replies: [],
@@ -215,15 +226,6 @@ function CommentsTab({ language, verse, word }: TabProps) {
               -1
             ) + 1,
       });
-      console.log(
-        comments
-          .map(({ id }) => id)
-          .reduce(
-            (runningMaxId, currentId) =>
-              currentId > runningMaxId ? currentId : runningMaxId,
-            -1
-          ) + 1
-      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['comments']);
@@ -270,7 +272,7 @@ function CommentsTab({ language, verse, word }: TabProps) {
           <RichTextInput ref={inputRef} name="commentInput" />
           <div className="h-2" />
           <div className="flex flex-row justify-end gap-3">
-            <button onClick={() => setIsAddingComment(false)}>Discard</button>
+            <button onClick={() => setIsAddingComment(false)}>Cancel</button>
             <Button
               className="text-sm font-bold"
               onClick={() => createComment(inputRef.current?.value ?? '')}
