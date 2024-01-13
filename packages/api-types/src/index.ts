@@ -208,3 +208,25 @@ export interface Resource {
 export interface GetLemmaResourcesResponseBody {
   data: Record<string, Resource[]>;
 }
+
+export interface CommentThread {
+  id: string;
+  authorId: string;
+  wordId: string;
+  languageId: string;
+  body: string;
+  timestamp: Date;
+  resolved: boolean;
+  replies: CommentReply[];
+}
+
+export interface CommentReply {
+  id: string;
+  authorId: string;
+  body: string;
+  timestamp: Date;
+}
+
+export interface GetVerseCommentsResponseBody {
+  data: { [wordId: string]: CommentThread[] };
+}

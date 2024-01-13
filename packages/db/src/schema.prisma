@@ -25,21 +25,25 @@ enum EmailStatus {
 /// A user who can authenticate into the system.
 model AuthUser {
   /// The ID of the user.
-  id                 String                  @id @default(dbgenerated("generate_ulid()")) @db.Uuid
+  id                     String                  @id @default(dbgenerated("generate_ulid()")) @db.Uuid
   /// The display name of the user.
-  name               String?
+  name                   String?
   /// The status of the email (whether we can send emails or not).
-  emailStatus        EmailStatus             @default(UNVERIFIED)
+  emailStatus            EmailStatus             @default(UNVERIFIED)
   /// The list of system roles this user has
-  systemRoles        UserSystemRole[]
+  systemRoles            UserSystemRole[]
   /// The list of sessions for the user.
-  auth_session       AuthSession[]
+  auth_session           AuthSession[]
   /// The list of auth keys for the user
-  auth_key           AuthKey[]
+  auth_key               AuthKey[]
   /// The roles for this user on all languages.
-  languageRoles      LanguageMemberRole[]
+  languageRoles          LanguageMemberRole[]
   /// The list of emails awaiting verification.
-  emailVerifications UserEmailVerification[]
+  emailVerifications     UserEmailVerification[]
+  /// Comment threads this user has created
+  authoredCommentThreads CommentThread[]
+  /// Replies on comment threads this user has created
+  authoredCommentReplies CommentReply[]
 
   @@map("User")
 }
@@ -123,17 +127,17 @@ model Book {
 /// A verse within a Book of the Bible.
 model Verse {
   /// The ID of the verse in the format `BBCCCVVV`.
-  id           String             @id
+  id      String @id
   /// The verse number as it appears in most Bibles.
-  number       Int
+  number  Int
   /// The chapter number as it appears in most Bibles.
-  chapter      Int
+  chapter Int
   /// The book the verse belongs in.
-  book         Book               @relation(fields: [bookId], references: [id])
+  book    Book   @relation(fields: [bookId], references: [id])
   /// The ID of the book the verse belongs in.
-  bookId       Int
+  bookId  Int
   /// The list of words in the verse.
-  words        Word[]
+  words   Word[]
 
   @@unique([bookId, chapter, number])
 }
@@ -141,21 +145,23 @@ model Verse {
 /// A single word within a verse.
 model Word {
   /// The ID of the verse in the format `BBCCCVVVWW`. The last two digits are in order as the words appear in the verse.
-  id             String         @id
+  id             String          @id
   /// The text in Greek, Hebrew, or Aramaic as it appears in the critical text.
   text           String
   /// The verse the word appears in.
-  verse          Verse          @relation(fields: [verseId], references: [id])
+  verse          Verse           @relation(fields: [verseId], references: [id])
   /// The ID of the verse the word appears in.
   verseId        String
   /// The specific form of the lemma for the word.
-  form           LemmaForm      @relation(fields: [formId], references: [id])
+  form           LemmaForm       @relation(fields: [formId], references: [id])
   /// The ID of the specific form of the lemma for the word.
   formId         String
   /// The list of glosses in different languages for this word.
   glosses        Gloss[]
   /// The list of machine glosses in different langugages for this word.
   machineGlosses MachineGloss[]
+  /// The comment threads attached to the word.
+  comments       CommentThread[]
 }
 
 /// A form of a lemma. This are differentiated by grammatical forms, as well as suffixes and prefixes.
@@ -209,6 +215,8 @@ model Language {
   roles               LanguageMemberRole[]
   /// The pending import job if any.
   importJob           LanguageImportJob?
+  /// Translator comments for the languag
+  comments            CommentThread[]
 }
 
 /// Keeps track of a language import job.
@@ -298,6 +306,50 @@ model LemmaResource {
   content      String
 
   @@id([lemmaId, resourceCode])
+}
+
+/// A comment thread on a particular word, for a particular language
+model CommentThread {
+  /// The ID of the comment thread. 
+  id         String         @id @default(dbgenerated("generate_ulid()")) @db.Uuid
+  /// The user who created this comment.
+  author     AuthUser       @relation(fields: [authorId], references: [id])
+  /// The id of the author.
+  authorId   String         @db.Uuid
+  /// The word this comment thread is attached to.
+  word       Word           @relation(fields: [wordId], references: [id])
+  /// The ID of the word that this comment thread is attachted to.
+  wordId     String
+  /// The translation language this comment is under
+  language   Language       @relation(fields: [languageId], references: [id])
+  /// The ID of the translation language this comment is under
+  languageId String         @db.Uuid
+  /// The body of the initial comment created by the author. Stored as HTML (rich text).
+  body       String
+  /// The timestamp when the comment thread was created.
+  timestamp  DateTime       @default(now())
+  /// Whether the comment thread is resolved or not.
+  resolved   Boolean        @default(false)
+  /// All the replies on this comment thread.
+  replies    CommentReply[]
+}
+
+/// A reply on a parent comment thread
+model CommentReply {
+  /// The ID of the comment reply. 
+  id        String        @id @default(dbgenerated("generate_ulid()")) @db.Uuid
+  /// The parent comment thread that this reply is linked to
+  parent    CommentThread @relation(fields: [parentId], references: [id])
+  /// The ID of the parent comment thread
+  parentId  String        @db.Uuid
+  /// The user who created this comment reply
+  author    AuthUser      @relation(fields: [authorId], references: [id])
+  /// The ID of the author
+  authorId  String        @db.Uuid
+  /// The body of the comment reply. Stored as HTML (rich text).
+  body      String
+  /// The timestamp when the comment reply was created.
+  timestamp DateTime      @default(now())
 }
 
 enum ResourceCode {
