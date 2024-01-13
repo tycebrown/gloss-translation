@@ -12,6 +12,7 @@ import Button from '../../shared/components/actions/Button';
 import RichTextInput from '../../shared/components/form/RichTextInput';
 import RichText from '../../shared/components/RichText';
 import { useAccessControl } from '../../shared/accessControl';
+import useAuth from '../../shared/hooks/useAuth';
 
 /// ------------- TODO: add comment to database, (move replying)?
 
@@ -157,43 +158,53 @@ function ChapterTab({ language, verse, word }: TabProps) {
 function CommentsTab({ language, verse, word }: TabProps) {
   const queryClient = useQueryClient();
   const commentsQuery = useQuery({
-    queryKey: ['word-comments', language, verse.id],
-    queryFn: () => apiClient.verses.findVerseComments(verse.id, language),
+    queryKey: ['word-comments', language, word.id],
+    queryFn: () => apiClient.words.findWordComments(word.id, language),
   });
+  const wordComments = commentsQuery.isSuccess ? commentsQuery.data.data : [];
 
-  const wordComments = commentsQuery.isSuccess
-    ? commentsQuery.data?.data[word.id]
-    : [];
+  const addCommentMutation = useMutation({
+    mutationFn: ({ authorId, body }: { authorId: string; body: string }) =>
+      apiClient.words.addComment({
+        wordId: word.id,
+        language,
+        body: body,
+        authorId: authorId,
+      }),
+    onSuccess: () =>
+      queryClient.invalidateQueries(['word-comments', language, word.id]),
+  });
 
   return (
     <>
       <div className="mt-1 mb-4">
-        <AddCommentsView
-          createComment={() => {
-            return;
-          }}
-        />
+        <AddCommentsView addComment={addCommentMutation.mutate} />
       </div>
-      <ol>
-        {wordComments.map((comment) => (
-          <li key={comment.id} className="mb-2.5">
+      {commentsQuery.isLoading && (
+        <div className="flex items-center justify-center w-full h-full">
+          <LoadingSpinner />
+        </div>
+      )}
+      {commentsQuery.isSuccess &&
+        wordComments.map((comment) => (
+          <div key={comment.id} className="mb-2.5">
             <CommentThreadView comment={comment} />
-          </li>
+          </div>
         ))}
-      </ol>
     </>
   );
 
   function AddCommentsView({
-    createComment,
+    addComment,
   }: {
-    createComment: (body: string) => void;
+    addComment: (commentData: { body: string; authorId: string }) => void;
   }) {
     const [isAddingComment, setIsAddingComment] = useState(false);
     const inputRef = useRef<HTMLInputElement | null>(null);
     useEffect(() => {
       inputRef.current?.focus();
     }, [isAddingComment]);
+    const { user } = useAuth();
 
     return (
       <>
@@ -212,7 +223,12 @@ function CommentsTab({ language, verse, word }: TabProps) {
             <button onClick={() => setIsAddingComment(false)}>Cancel</button>
             <Button
               className="text-sm font-bold"
-              onClick={() => createComment(inputRef.current?.value ?? '')}
+              onClick={() =>
+                addComment({
+                  authorId: user?.id ?? '',
+                  body: inputRef.current?.value ?? '',
+                })
+              }
             >
               <Icon icon="comment" /> Submit
             </Button>

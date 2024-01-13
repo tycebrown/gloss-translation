@@ -1,4 +1,8 @@
-import type { PatchWordGlossRequestBody } from '@translation/api-types';
+import type {
+  GetWordCommentsResponseBody,
+  PatchWordGlossRequestBody,
+  PostCommentRequestBody,
+} from '@translation/api-types';
 import ApiClient from './client';
 
 export { PatchWordGlossRequestBody };
@@ -16,6 +20,29 @@ export default class Verses {
   }): Promise<void> {
     await this.client.patch({
       path: `/api/languages/${language}/words/${wordId}`,
+      body,
+    });
+  }
+
+  findWordComments(
+    wordId: string,
+    language: string
+  ): Promise<GetWordCommentsResponseBody> {
+    return this.client.get({
+      path: `/api/languages/${language}/words/${wordId}/comments`,
+    });
+  }
+
+  async addComment({
+    wordId,
+    language,
+    ...body
+  }: PostCommentRequestBody & {
+    wordId: string;
+    language: string;
+  }): Promise<void> {
+    await this.client.post({
+      path: `/api/languages/${language}/words/${wordId}/comments`,
       body,
     });
   }

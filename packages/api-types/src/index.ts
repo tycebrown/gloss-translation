@@ -227,6 +227,11 @@ export interface CommentReply {
   timestamp: Date;
 }
 
-export interface GetVerseCommentsResponseBody {
-  data: { [wordId: string]: CommentThread[] };
+export interface GetWordCommentsResponseBody {
+  data: CommentThread[];
+}
+
+export interface PostCommentRequestBody {
+  body: string;
+  authorId: string;
 }
