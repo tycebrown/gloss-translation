@@ -223,12 +223,13 @@ function CommentsTab({ language, verse, word }: TabProps) {
             <button onClick={() => setIsAddingComment(false)}>Cancel</button>
             <Button
               className="text-sm font-bold"
-              onClick={() =>
+              onClick={() => {
+                console.log('dfksdjfksdlkdjfjdfkskf');
                 addComment({
                   authorId: user?.id ?? '',
                   body: inputRef.current?.value ?? '',
-                })
-              }
+                });
+              }}
             >
               <Icon icon="comment" /> Submit
             </Button>

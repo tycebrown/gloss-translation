@@ -1,7 +1,10 @@
 import * as z from 'zod';
 import createRoute from '../../../../../../shared/Route';
 import { client } from '../../../../../../shared/db';
-import { GetWordCommentsResponseBody } from '@translation/api-types';
+import {
+  GetWordCommentsResponseBody,
+  PostCommentRequestBody,
+} from '@translation/api-types';
 
 export default createRoute<{ code: string; wordId: string }>()
   .get<void, GetWordCommentsResponseBody>({
@@ -27,7 +30,7 @@ export default createRoute<{ code: string; wordId: string }>()
       res.ok(responseBody);
     },
   })
-  .post<{ body: string; authorId: string }, void>({
+  .post<PostCommentRequestBody, void>({
     schema: z.object({
       body: z.string(),
       authorId: z.string(),
@@ -49,6 +52,10 @@ export default createRoute<{ code: string; wordId: string }>()
           wordId: req.query.wordId,
         },
       });
+
+      res.created(
+        `/api/languages/${language}/words/${req.query.wordId}/comments`
+      );
     },
   })
   .build();
