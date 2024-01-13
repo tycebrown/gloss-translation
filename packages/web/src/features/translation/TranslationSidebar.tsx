@@ -224,7 +224,6 @@ function CommentsTab({ language, verse, word }: TabProps) {
             <Button
               className="text-sm font-bold"
               onClick={() => {
-                console.log('dfksdjfksdlkdjfjdfkskf');
                 addComment({
                   authorId: user?.id ?? '',
                   body: inputRef.current?.value ?? '',
@@ -277,42 +276,6 @@ function CommentThreadView({ comment }: { comment: CommentThread }) {
           </button>
         </div>
       </div>
-      {isViewOpen && (
-        <>
-          <ol className="flex flex-col gap-1">
-            {comment.replies.map((reply) => (
-              <li key={reply.id}>
-                <div className="flex flex-col px-3 py-2 border border-slate-400 gap-1.5 rounded ml-8">
-                  <div className="flex flex-row justify-between">
-                    <div className="font-bold">
-                      {usersQuery.isSuccess &&
-                        usersQuery?.data.data.find(
-                          ({ id }) => id === comment.authorId
-                        )?.name}
-                    </div>
-                    <div className="text-sm">
-                      {new Date(comment.timestamp).toLocaleDateString('en-US', {
-                        hour12: true,
-                        hour: 'numeric',
-                        minute: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                      })}
-                    </div>
-                  </div>
-                  <RichText content={comment.body} />
-                </div>
-              </li>
-            ))}
-          </ol>
-          <div>
-            <button className="ml-12 font-bold">
-              <Icon icon="reply" /> Reply
-            </button>
-          </div>
-        </>
-      )}
     </div>
   );
 }
