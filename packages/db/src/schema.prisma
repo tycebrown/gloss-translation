@@ -215,7 +215,7 @@ model Language {
   roles               LanguageMemberRole[]
   /// The pending import job if any.
   importJob           LanguageImportJob?
-  /// Translator comments for the languag
+  /// Translator comments for the language
   comments            CommentThread[]
 }
 
@@ -308,7 +308,7 @@ model LemmaResource {
   @@id([lemmaId, resourceCode])
 }
 
-/// A comment thread on a particular word, for a particular language
+/// A comment thread on a particular word, for a particular language.
 model CommentThread {
   /// The ID of the comment thread. 
   id         String         @id @default(dbgenerated("generate_ulid()")) @db.Uuid
@@ -320,9 +320,9 @@ model CommentThread {
   word       Word           @relation(fields: [wordId], references: [id])
   /// The ID of the word that this comment thread is attachted to.
   wordId     String
-  /// The translation language this comment is under
+  /// The translation language this comment is under.
   language   Language       @relation(fields: [languageId], references: [id])
-  /// The ID of the translation language this comment is under
+  /// The ID of the translation language this comment is under.
   languageId String         @db.Uuid
   /// The body of the initial comment created by the author. Stored as HTML (rich text).
   body       String
@@ -334,15 +334,15 @@ model CommentThread {
   replies    CommentReply[]
 }
 
-/// A reply on a parent comment thread
+/// A reply on a parent comment thread.
 model CommentReply {
   /// The ID of the comment reply. 
   id        String        @id @default(dbgenerated("generate_ulid()")) @db.Uuid
-  /// The parent comment thread that this reply is linked to
+  /// The parent comment thread that this reply is linked to.
   parent    CommentThread @relation(fields: [parentId], references: [id])
-  /// The ID of the parent comment thread
+  /// The ID of the parent comment.
   parentId  String        @db.Uuid
-  /// The user who created this comment reply
+  /// The user who created this comment reply.
   author    AuthUser      @relation(fields: [authorId], references: [id])
   /// The ID of the author
   authorId  String        @db.Uuid

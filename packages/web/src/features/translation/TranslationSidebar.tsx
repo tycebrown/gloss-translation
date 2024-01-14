@@ -14,8 +14,6 @@ import RichText from '../../shared/components/RichText';
 import { useAccessControl } from '../../shared/accessControl';
 import useAuth from '../../shared/hooks/useAuth';
 
-/// ------------- TODO: add comment to database, (move replying)?
-
 type TranslationSidebarProps = {
   language: string;
   verse: Verse;
