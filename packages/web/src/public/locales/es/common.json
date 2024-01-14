@@ -6,6 +6,7 @@
   "confirm": "Confirmar",
   "confirm_prompt": "Escriba '{{value}}' para confirmar su decisión.",
   "create": "Crear",
+  "comment": "Comentario",
   "direction": {
     "down": "abajo",
     "up": "arriba"
@@ -22,5 +23,6 @@
   "try_again": "Intentar de Nuevo",
   "unknown_error": "Error Desconocido",
   "unknown_error_message": "Ha ocurrido un error desconocido.",
-  "update": "Actualizar"
+  "update": "Actualizar",
+  "submit": "Entregar"
 }

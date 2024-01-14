@@ -205,6 +205,7 @@ function CommentsTab({ language, verse, word }: TabProps) {
       inputRef.current?.focus();
     }, [isAddingComment]);
     const { user } = useAuth();
+    const { t } = useTranslation();
 
     return (
       <>
@@ -213,14 +214,16 @@ function CommentsTab({ language, verse, word }: TabProps) {
           disabled={isAddingComment}
           onClick={() => setIsAddingComment(true)}
         >
-          <Icon icon="plus" /> Comment
+          <Icon icon="plus" /> {t('common:comment')}
         </Button>
 
         <div className={!isAddingComment ? 'hidden' : ''}>
           <RichTextInput ref={inputRef} name="commentInput" />
           <div className="h-2" />
           <div className="flex flex-row justify-end gap-3">
-            <button onClick={() => setIsAddingComment(false)}>Cancel</button>
+            <button onClick={() => setIsAddingComment(false)}>
+              {t('common:cancel')}
+            </button>
             <Button
               className="text-sm font-bold"
               onClick={() => {
@@ -230,7 +233,7 @@ function CommentsTab({ language, verse, word }: TabProps) {
                 });
               }}
             >
-              <Icon icon="comment" /> Submit
+              <Icon icon="comment" /> {t('common:submit')}
             </Button>
           </div>
         </div>
@@ -242,6 +245,7 @@ function CommentsTab({ language, verse, word }: TabProps) {
 function CommentThreadView({ comment }: { comment: CommentThread }) {
   const [isViewOpen, setIsViewOpen] = useState(false);
   const usersQuery = useQuery(['users'], () => apiClient.users.findAll());
+  const { t } = useTranslation();
 
   return (
     <div className="flex flex-col gap-1">
@@ -269,10 +273,10 @@ function CommentThreadView({ comment }: { comment: CommentThread }) {
         <RichText content={comment.body} />
         <div className="flex flex-row gap-2">
           <button className="font-bold">
-            <Icon icon="check" /> Resolve
+            <Icon icon="check" /> {t('translate:resolve')}
           </button>
           <button className="font-bold">
-            <Icon icon="reply" /> Reply
+            <Icon icon="reply" /> {t('translate:reply')}
           </button>
         </div>
       </div>

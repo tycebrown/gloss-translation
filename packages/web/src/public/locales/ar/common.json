@@ -6,6 +6,7 @@
   "confirm": "يتأكد",
   "confirm_prompt": "اكتب '{{value}}' لتأكيد قرارك.",
   "create": "إنشاء",
+  "comment": "تعليق",
   "direction": {
     "down": "تحت",
     "up": "أعلى"
@@ -16,6 +17,7 @@
   "next": "التالي",
   "not_found": "غير موجود",
   "not_found_message": "لم نتمكن من العثور على ما تبحث عنه.",
+  "submit": "تعليق",
   "submitting": "جاري الإرسال",
   "success": "نجاح",
   "too_many_options": "الكثير من الخيارات التي يجب عرضها.يرجى تصفية مزيد من.",
