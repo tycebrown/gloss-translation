@@ -1,4 +1,3 @@
 {
-  "typescript.preferences.importModuleSpecifier": "project-relative",
-  "react-i18n.i18nPaths": "packages\\web\\src\\public\\locales"
+  "typescript.preferences.importModuleSpecifier": "project-relative"
 }
