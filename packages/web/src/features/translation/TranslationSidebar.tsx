@@ -1,11 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CommentThread, Verse, VerseWord } from '@translation/api-types';
+import DOMPurify from 'dompurify';
 import { useTranslation } from 'react-i18next';
 import apiClient from '../../shared/apiClient';
 import { Icon } from '../../shared/components/Icon';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
 import { parseVerseId } from './verse-utils';
-import DOMPurify from 'dompurify';
 import { ReactNode, useEffect, useRef, useState } from 'react';
 import { Tab } from '@headlessui/react';
 import Button from '../../shared/components/actions/Button';
@@ -18,6 +18,7 @@ type TranslationSidebarProps = {
   language: string;
   verse: Verse;
   wordIndex: number;
+  showComments: boolean;
   onClose: () => void;
 };
 
@@ -45,6 +46,7 @@ export const TranslationSidebar = ({
   language,
   verse,
   wordIndex,
+  showComments,
   onClose,
 }: TranslationSidebarProps) => {
   const word = verse.words[wordIndex];

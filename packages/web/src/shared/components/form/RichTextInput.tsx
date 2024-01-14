@@ -2,6 +2,7 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { Icon } from '../Icon';
 import { ComponentProps, forwardRef, useImperativeHandle, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export interface RichTextInputProps {
   name: string;
@@ -27,6 +28,7 @@ export const extensions = [
 
 const RichTextInput = forwardRef<RichTextInputRef, RichTextInputProps>(
   ({ name, onChange, onBlur, ...props }, ref) => {
+    const { t } = useTranslation(['common']);
     const hiddenInput = useRef<HTMLInputElement>(null);
 
     const editor = useEditor({
@@ -81,27 +83,27 @@ const RichTextInput = forwardRef<RichTextInputRef, RichTextInputProps>(
     return (
       <div className="border rounded border-slate-400 focus-within:outline focus-within:outline-2 focus-within:outline-blue-600">
         <input type="hidden" ref={hiddenInput} name={name} />
-        <div className="border-slate-400 border-b p-1 flex gap-3">
+        <div className="flex gap-3 p-1 border-b border-slate-400">
           <div className="flex gap-1">
             <RichTextInputButton
               active={editor?.isActive('bold')}
               disabled={!editor?.can().toggleBold()}
               icon="bold"
-              label="Bold"
+              label={t('common:rich_text.bold_tooltip')}
               onClick={() => editor?.chain().focus().toggleBold().run()}
             />
             <RichTextInputButton
               active={editor?.isActive('italic')}
               disabled={!editor?.can().toggleItalic()}
               icon="italic"
-              label="Italic"
+              label={t('common:rich_text.italic_tooltip')}
               onClick={() => editor?.chain().focus().toggleItalic().run()}
             />
             <RichTextInputButton
               active={editor?.isActive('strike')}
               disabled={!editor?.can().toggleStrike()}
               icon="strikethrough"
-              label="Strikethrough"
+              label={t('common:rich_text.strike_tooltip')}
               onClick={() => editor?.chain().focus().toggleStrike().run()}
             />
           </div>
@@ -110,20 +112,20 @@ const RichTextInput = forwardRef<RichTextInputRef, RichTextInputProps>(
               active={editor?.isActive('bulletList')}
               disabled={!editor?.can().toggleBulletList()}
               icon="list-ul"
-              label="Bullet List"
+              label={t('common:rich_text.bullet_list_tooltip')}
               onClick={() => editor?.chain().focus().toggleBulletList().run()}
             />
             <RichTextInputButton
               active={editor?.isActive('orderedList')}
               disabled={!editor?.can().toggleOrderedList()}
               icon="list-ol"
-              label="Ordered List"
+              label={t('common:rich_text.ordered_list_tooltip')}
               onClick={() => editor?.chain().focus().toggleOrderedList().run()}
             />
             <RichTextInputButton
               disabled={!editor?.can().sinkListItem('listItem')}
               icon="indent"
-              label="Indent"
+              label={t('common:rich_text.indent_tooltip')}
               onClick={() =>
                 editor?.chain().focus().sinkListItem('listItem').run()
               }
@@ -131,14 +133,14 @@ const RichTextInput = forwardRef<RichTextInputRef, RichTextInputProps>(
             <RichTextInputButton
               disabled={!editor?.can().liftListItem('listItem')}
               icon="outdent"
-              label="Outdent"
+              label={t('common:rich_text.outdent_tooltip')}
               onClick={() =>
                 editor?.chain().focus().liftListItem('listItem').run()
               }
             />
           </div>
         </div>
-        <EditorContent editor={editor} className="py-2 px-3" />
+        <EditorContent editor={editor} className="px-3 py-2" />
       </div>
     );
   }
@@ -171,6 +173,7 @@ function RichTextInputButton({
       `}
       onClick={onClick}
       disabled={disabled}
+      title={label}
     >
       <Icon icon={icon} />
       <span className="sr-only">{label}</span>
