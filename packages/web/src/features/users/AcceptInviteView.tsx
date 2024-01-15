@@ -87,8 +87,8 @@ export default function AcceptInviteView() {
   };
 
   return (
-    <View fitToScreen className="flex justify-center items-start">
-      <Card className="mx-4 mt-4 w-96 flex-shrink p-6">
+    <View fitToScreen className="flex items-start justify-center">
+      <Card className="flex-shrink p-6 mx-4 mt-4 w-96">
         <ViewTitle>{t('users:create_account')}</ViewTitle>
         <Form context={formContext} onSubmit={onSubmit}>
           <div className="mb-4">
@@ -102,18 +102,18 @@ export default function AcceptInviteView() {
               defaultValue={invite.email}
             />
           </div>
-          <div className="mb-2 flex gap-4">
-            <div className="w-full flex-1">
+          <div className="flex gap-4 mb-2">
+            <div className="flex-1 w-full">
               <FormLabel htmlFor="first-name">
                 {t('users:first_name').toUpperCase()}
               </FormLabel>
               <TextInput
                 id="first-name"
-                name="firstName"
                 className="w-full"
                 autoComplete="given-name"
                 required
                 aria-describedby="first-name-error"
+                {...formContext.register('firstName', { required: true })}
               />
               <InputError
                 id="first-name-error"
@@ -121,17 +121,17 @@ export default function AcceptInviteView() {
                 messages={{ required: t('users:errors.name_required') }}
               />
             </div>
-            <div className="w-full flex-1">
+            <div className="flex-1 w-full">
               <FormLabel htmlFor="last-name">
                 {t('users:last_name').toUpperCase()}
               </FormLabel>
               <TextInput
                 id="last-name"
-                name="lastName"
                 className="w-full"
                 autoComplete="family-name"
                 required
                 aria-describedby="last-name-error"
+                {...formContext.register('lastName', { required: true })}
               />
               <InputError
                 id="last-name-error"
@@ -147,12 +147,12 @@ export default function AcceptInviteView() {
             <TextInput
               type="password"
               id="password"
-              name="password"
               className="w-full"
               autoComplete="new-password"
               required
               minLength={8}
               aria-describedby="password-error"
+              {...formContext.register('password')}
             />
             <InputError
               id="password-error"
@@ -170,11 +170,11 @@ export default function AcceptInviteView() {
             <TextInput
               type="password"
               id="confirm-password"
-              name="confirmPassword"
               className="w-full"
               autoComplete="new-password"
               confirms="password"
               aria-describedby="confirm-password-error"
+              {...formContext.register('confirmPassword')}
             />
             <InputError
               id="confirm-password-error"

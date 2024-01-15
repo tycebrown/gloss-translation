@@ -1,36 +1,34 @@
-import { ComponentProps, forwardRef } from 'react';
-import { Validate, useFormContext } from 'react-hook-form';
-import useMergedRef from '../../hooks/mergeRefs';
+import { ComponentProps, forwardRef, useImperativeHandle, useRef } from 'react';
+import { useFormContext } from 'react-hook-form';
 
-export interface TextInputProps extends Omit<ComponentProps<'input'>, 'name'> {
+export interface TextInputProps extends ComponentProps<'input'> {
   name: string;
-  confirms?: string;
-  validate?: Record<string, Validate<any, any>>;
 }
 
-const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
-  (
-    { className = '', required, minLength, confirms, validate, ...props },
-    ref
-  ) => {
-    const context = useFormContext();
-    const hasErrors = !!context?.formState.errors[props.name];
-    validate ??= {};
-    if (confirms) {
-      validate.confirms = (value: unknown) =>
-        value === context.getValues()[confirms];
-    }
-    const registerProps = context?.register(props.name, {
-      required,
-      minLength: minLength,
-      ...(confirms && {
-        deps: confirms,
-      }),
-      validate,
-      onChange: props.onChange,
-      onBlur: props.onBlur,
-    });
+export interface TextInputRef {
+  focus(): void;
+}
 
+const TextInput = forwardRef<TextInputRef, TextInputProps>(
+  ({ className = '', name, ...props }, ref) => {
+    const context = useFormContext();
+    const hasErrors = !!context?.formState.errors[name];
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    useImperativeHandle(ref, () => ({
+      get value() {
+        return inputRef.current?.value ?? '';
+      },
+      set value(newValue: string | undefined) {
+        const input = inputRef.current;
+        if (input) {
+          input.value = newValue ?? '';
+        }
+      },
+      focus() {
+        inputRef.current?.focus();
+      },
+    }));
     return (
       <input
         className={`
@@ -44,8 +42,7 @@ const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
           ${className}
         `}
         {...props}
-        {...registerProps}
-        ref={useMergedRef(ref, registerProps?.ref)}
+        ref={inputRef}
       />
     );
   }

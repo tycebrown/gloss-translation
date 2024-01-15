@@ -64,22 +64,24 @@ export default function UpdateProfileView() {
   if (!user) return null;
 
   return (
-    <View fitToScreen className="flex justify-center items-start">
-      <Card className="mx-4 mt-4 w-96 flex-shrink p-6">
+    <View fitToScreen className="flex items-start justify-center">
+      <Card className="flex-shrink p-6 mx-4 mt-4 w-96">
         <ViewTitle>{t('users:update_profile')}</ViewTitle>
         <Form context={formContext} onSubmit={onSubmit}>
           <div className="mb-2">
             <FormLabel htmlFor="email">
               {t('users:email').toUpperCase()}
             </FormLabel>
+            required, minLength, confirms, validate
             <TextInput
               id="email"
-              name="email"
               type="email"
               className="w-full"
               autoComplete="email"
-              required
               aria-describedby="email-error"
+              {...formContext.register('email', {
+                required: true,
+              })}
             />
             <InputError
               id="email-error"
@@ -93,11 +95,10 @@ export default function UpdateProfileView() {
             </FormLabel>
             <TextInput
               id="name"
-              name="name"
               className="w-full"
               autoComplete="name"
-              required
               aria-describedby="name-error"
+              {...formContext.register('name', { required: true })}
             />
             <InputError
               id="name-error"
@@ -112,11 +113,13 @@ export default function UpdateProfileView() {
             <TextInput
               type="password"
               id="password"
-              name="password"
               className="w-full"
               autoComplete="new-password"
-              minLength={8}
               aria-describedby="password-error"
+              {...formContext.register('password', {
+                required: true,
+                minLength: 8,
+              })}
             />
             <InputError
               id="password-error"
@@ -134,11 +137,17 @@ export default function UpdateProfileView() {
             <TextInput
               type="password"
               id="confirm-password"
-              name="confirmPassword"
               className="w-full"
               autoComplete="new-password"
               confirms="password"
               aria-describedby="confirm-password-error"
+              {...formContext.register('confirmPassword', {
+                required: true,
+                deps: 'password',
+                validate: {
+                  confirm: (value, formValues) => value === formValues.password,
+                },
+              })}
             />
             <InputError
               id="confirm-password-error"

@@ -43,8 +43,8 @@ export default function InviteUserView() {
   };
 
   return (
-    <View fitToScreen className="flex justify-center items-start">
-      <Card className="mx-4 mt-4 w-96 flex-shrink p-6">
+    <View fitToScreen className="flex items-start justify-center">
+      <Card className="flex-shrink p-6 mx-4 mt-4 w-96">
         <ViewTitle>{t('users:log_in')}</ViewTitle>
         <Form context={formContext} onSubmit={onSubmit}>
           <div className="mb-4">
@@ -53,11 +53,10 @@ export default function InviteUserView() {
             </FormLabel>
             <TextInput
               id="email"
-              name="email"
               className="w-full"
               autoComplete="username"
-              required
               aria-describedby="email-error"
+              {...formContext.register('email', { required: true })}
             />
             <InputError
               id="email-error"
@@ -74,11 +73,10 @@ export default function InviteUserView() {
             <TextInput
               id="password"
               type="password"
-              name="password"
               className="w-full"
               autoComplete="current-password"
-              required
               aria-describedby="password-error"
+              {...formContext.register('password', { required: true })}
             />
             <InputError
               id="password-error"
