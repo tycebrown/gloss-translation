@@ -156,8 +156,8 @@ export default function ManageLanguageView() {
   const [previewFont, setPreviewFont] = useState(language.data.font);
 
   return (
-    <View fitToScreen className="flex justify-center items-start">
-      <div className="mx-4 flex-shrink">
+    <View fitToScreen className="flex items-start justify-center">
+      <div className="flex-shrink mx-4">
         <ViewTitle className="flex">
           <span>{language.data.name}</span>
           <span className="mx-2">-</span>

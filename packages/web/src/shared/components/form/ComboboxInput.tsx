@@ -4,9 +4,9 @@ import {
   KeyboardEventHandler,
   forwardRef,
   useEffect,
+  useImperativeHandle,
   useState,
 } from 'react';
-import { Controller, useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../Icon';
 
@@ -18,63 +18,8 @@ export interface ComboboxItem {
   value: string;
 }
 
-export type ComboboxInputProps = BaseComboboxInputProps & {
-  required?: boolean;
-  isolate?: boolean;
-};
-
-export default function ComboboxInput(props: ComboboxInputProps) {
-  const context = useFormContext();
-
-  if (context && !props.isolate) {
-    return (
-      <Controller
-        control={context.control}
-        name={props.name}
-        defaultValue={props.defaultValue}
-        rules={{ required: props.required }}
-        render={({ field, fieldState }) => (
-          <BaseComboboxInput
-            {...field}
-            items={props.items}
-            hasErrors={!!fieldState.error}
-          />
-        )}
-      />
-    );
-  } else {
-    const {
-      className,
-      name,
-      items,
-      value,
-      defaultValue,
-      hasErrors,
-      up,
-      onBlur,
-      onChange,
-      onCreate,
-      onKeyDown,
-    } = props;
-    return (
-      <BaseComboboxInput
-        className={className}
-        name={name}
-        items={items}
-        value={value}
-        defaultValue={defaultValue}
-        hasErrors={hasErrors}
-        up={up}
-        onBlur={onBlur}
-        onChange={onChange}
-        onCreate={onCreate}
-        onKeyDown={onKeyDown}
-      />
-    );
-  }
-}
-
-interface BaseComboboxInputProps
+// interface ComboboxInputRef {}
+interface ComboboxInputProps
   extends Omit<ComponentProps<'input'>, 'value' | 'onChange' | 'ref'> {
   className?: string;
   name: string;
@@ -89,7 +34,7 @@ interface BaseComboboxInputProps
   onKeyDown?: KeyboardEventHandler<HTMLInputElement>;
 }
 
-const BaseComboboxInput = forwardRef<HTMLInputElement, BaseComboboxInputProps>(
+const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(
   (
     {
       className = '',
@@ -104,7 +49,7 @@ const BaseComboboxInput = forwardRef<HTMLInputElement, BaseComboboxInputProps>(
       onKeyDown,
       disabled,
       ...props
-    }: BaseComboboxInputProps,
+    }: ComboboxInputProps,
     ref
   ) => {
     const { t } = useTranslation(['common']);
@@ -174,7 +119,7 @@ const BaseComboboxInput = forwardRef<HTMLInputElement, BaseComboboxInputProps>(
                 setNormalizedInputValue(event.target.value.normalize('NFD'))
               }
               onBlur={onBlur}
-              className="w-full py-2 px-3 h-10 rounded-b flex-grow focus:outline-none bg-transparent rounded"
+              className="flex-grow w-full h-10 px-3 py-2 bg-transparent rounded rounded-b focus:outline-none"
               displayValue={(value) =>
                 items.find((i) => i.value === value)?.label ?? ''
               }
@@ -200,7 +145,7 @@ const BaseComboboxInput = forwardRef<HTMLInputElement, BaseComboboxInputProps>(
             ) : (
               filteredItems.map((item) => (
                 <Combobox.Option
-                  className="px-3 py-2 ui-active:bg-blue-400 h-10"
+                  className="h-10 px-3 py-2 ui-active:bg-blue-400"
                   key={item.value}
                   value={item.value}
                 >
@@ -229,3 +174,5 @@ function ignoreDiacritics(word: string) {
   // From https://stackoverflow.com/a/37511463
   return word.normalize('NFD').replace(/\p{Diacritic}/gu, '');
 }
+
+export default ComboboxInput;

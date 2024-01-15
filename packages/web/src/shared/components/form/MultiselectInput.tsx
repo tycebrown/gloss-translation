@@ -3,37 +3,7 @@ import { Combobox } from '@headlessui/react';
 import { Controller, useFormContext } from 'react-hook-form';
 import { Icon } from '../Icon';
 
-export type MultiselectInputProps = BaseMultiselectInputProps & {
-  required?: boolean;
-  isolate?: boolean;
-};
-
-export default function MultiselectInput(props: MultiselectInputProps) {
-  const context = useFormContext();
-
-  if (context && !props.isolate) {
-    return (
-      <Controller
-        control={context.control}
-        name={props.name}
-        defaultValue={props.defaultValue}
-        rules={{ required: props.required }}
-        render={({ field, fieldState }) => (
-          <BaseMultiselectInput
-            {...field}
-            items={props.items}
-            hasErrors={!!fieldState.error}
-            placeholder={props.placeholder}
-          />
-        )}
-      />
-    );
-  } else {
-    return <BaseMultiselectInput {...props} />;
-  }
-}
-
-interface BaseMultiselectInputProps {
+export interface MultiselectInputProps {
   className?: string;
   name: string;
   items: { label: string; value: string }[];
@@ -45,10 +15,7 @@ interface BaseMultiselectInputProps {
   onBlur?(): void;
 }
 
-const BaseMultiselectInput = forwardRef<
-  HTMLInputElement,
-  BaseMultiselectInputProps
->(
+const MultiselectInput = forwardRef<HTMLInputElement, MultiselectInputProps>(
   (
     {
       className = '',
@@ -84,7 +51,7 @@ const BaseMultiselectInput = forwardRef<
           `}
           >
             <Combobox.Input
-              className="w-full py-2 px-3 h-10 rounded-b flex-grow focus:outline-none bg-transparent rounded"
+              className="flex-grow w-full h-10 px-3 py-2 bg-transparent rounded rounded-b focus:outline-none"
               readOnly
               ref={ref}
               onBlur={onBlur}
@@ -99,7 +66,7 @@ const BaseMultiselectInput = forwardRef<
               {({ open }) => <Icon icon={open ? 'caret-up' : 'caret-down'} />}
             </Combobox.Button>
           </div>
-          <Combobox.Options className="absolute z-20 mt-1 max-h-80 w-full overflow-auto rounded border border-slate-400 bg-white shadow">
+          <Combobox.Options className="absolute z-20 w-full mt-1 overflow-auto bg-white border rounded shadow max-h-80 border-slate-400">
             {items.map((item) => (
               <Combobox.Option
                 className="px-3 py-2 ui-active:bg-blue-400"
@@ -122,3 +89,5 @@ const BaseMultiselectInput = forwardRef<
     );
   }
 );
+
+export default MultiselectInput;

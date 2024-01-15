@@ -84,7 +84,7 @@ const BaseSortableMultiselectInput = forwardRef<
       className={`${className} group/multiselect relative flex flex-col gap-1`}
     >
       {selected.length > 0 && (
-        <div className="border rounded flex-col shadow-inner flex border-slate-400">
+        <div className="flex flex-col border rounded shadow-inner border-slate-400">
           {selected
             .map((v) => items.find((i) => i.value === v))
             .filter((item?: ItemType): item is ItemType => !!item)
@@ -92,8 +92,8 @@ const BaseSortableMultiselectInput = forwardRef<
               const isFirst = i === 0;
               const isLast = i === value.length - 1;
               return (
-                <div className="py-2 px-1 flex items-center" key={item.value}>
-                  <span className="grow mx-1">{item.label}</span>
+                <div className="flex items-center px-1 py-2" key={item.value}>
+                  <span className="mx-1 grow">{item.label}</span>
                   <button
                     className={`w-8 h-8 pt-[2px] ${
                       isFirst && 'disabled:opacity-25'
@@ -137,14 +137,13 @@ const BaseSortableMultiselectInput = forwardRef<
       <div className="flex gap-1">
         <ComboboxInput
           name="new"
-          className="grow block"
+          className="block grow"
           value={newItemValue}
           onChange={setNewItemValue}
           onBlur={onBlur}
           items={availableNewItems}
           disabled={availableNewItems.length === 0}
           autoComplete="off"
-          isolate
         />
         <Button onClick={addItem} onBlur={onBlur}>
           <Icon icon="add" />

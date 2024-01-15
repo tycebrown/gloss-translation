@@ -76,6 +76,7 @@ export default function UpdateProfileView() {
             <TextInput
               id="email"
               type="email"
+              hasErrors={!!formContext.formState.errors.email}
               className="w-full"
               autoComplete="email"
               aria-describedby="email-error"

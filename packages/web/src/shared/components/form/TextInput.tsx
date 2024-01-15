@@ -3,6 +3,7 @@ import { useFormContext } from 'react-hook-form';
 
 export interface TextInputProps extends ComponentProps<'input'> {
   name: string;
+  hasErrors: boolean;
 }
 
 export interface TextInputRef {
@@ -10,11 +11,8 @@ export interface TextInputRef {
 }
 
 const TextInput = forwardRef<TextInputRef, TextInputProps>(
-  ({ className = '', name, ...props }, ref) => {
-    const context = useFormContext();
-    const hasErrors = !!context?.formState.errors[name];
+  ({ className = '', name, hasErrors, ...props }, ref) => {
     const inputRef = useRef<HTMLInputElement>(null);
-
     useImperativeHandle(ref, () => ({
       get value() {
         return inputRef.current?.value ?? '';

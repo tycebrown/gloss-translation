@@ -25,7 +25,6 @@ export function ButtonSelectorInput({
   required,
   ...props
 }: ButtonSelectorInputProps) {
-  const formContext = useFormContext();
   const hasErrors = !!formContext?.formState.errors[name];
 
   return (
