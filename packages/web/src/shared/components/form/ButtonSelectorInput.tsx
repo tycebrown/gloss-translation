@@ -1,10 +1,16 @@
-import { ComponentProps, ReactNode, createContext, useContext } from 'react';
-import { useFormContext } from 'react-hook-form';
+import {
+  ComponentProps,
+  ReactNode,
+  createContext,
+  forwardRef,
+  useContext,
+} from 'react';
 
 interface ButtonSelectorContextValue {
   name: string;
   defaultValue?: string;
   required?: boolean;
+  hasErrors?: boolean;
 }
 
 const ButtonSelectorContext = createContext<ButtonSelectorContextValue | null>(
@@ -16,19 +22,21 @@ export interface ButtonSelectorInputProps
   name: string;
   defaultValue?: string;
   required?: boolean;
+  hasErrors?: boolean;
 }
 
 export function ButtonSelectorInput({
   children,
   name,
-  defaultValue,
   required,
+  defaultValue,
+  hasErrors,
   ...props
 }: ButtonSelectorInputProps) {
-  const hasErrors = !!formContext?.formState.errors[name];
-
   return (
-    <ButtonSelectorContext.Provider value={{ name, defaultValue, required }}>
+    <ButtonSelectorContext.Provider
+      value={{ name, defaultValue, required, hasErrors }}
+    >
       <fieldset
         className={`
           inline-block rounded
@@ -47,24 +55,19 @@ export function ButtonSelectorInput({
   );
 }
 
-export interface ButtonSelectorOptionProps {
+export interface ButtonSelectorOptionProps
+  extends Omit<ComponentProps<'input'>, 'required' | 'name'> {
   value: string;
   children: ReactNode;
 }
 
-export function ButtonSelectorOption({
-  value,
-  children,
-}: ButtonSelectorOptionProps) {
+export const ButtonSelectorOption = forwardRef<
+  HTMLInputElement,
+  ButtonSelectorOptionProps
+>(({ value, children, ...props }, ref) => {
   const selectorContext = useContext(ButtonSelectorContext);
   if (!selectorContext)
     throw new Error('ButtonSelectorOption must be within a ButtonSelector');
-
-  const formContext = useFormContext();
-  const hasErrors = !!formContext?.formState.errors[selectorContext.name];
-  const registerProps = formContext?.register(selectorContext.name, {
-    required: selectorContext.required,
-  });
 
   return (
     <label
@@ -74,11 +77,17 @@ export function ButtonSelectorOption({
         rtl:last:rounded-l rtl:last:border-l rtl:first:rounded-r
         [&:has(:checked)]:bg-slate-900 [&:has(:checked)]:text-white
         shadow-inner [&:has(:checked)]:shadow-none
-        ${hasErrors ? 'border-red-700 shadow-red-100' : 'border-slate-400'}
+        ${
+          selectorContext.hasErrors
+            ? 'border-red-700 shadow-red-100'
+            : 'border-slate-400'
+        }
       `}
     >
       <input
-        {...registerProps}
+        ref={ref}
+        {...props}
+        required={selectorContext.required}
         className="absolute opacity-0"
         type="radio"
         name={selectorContext.name}
@@ -88,4 +97,4 @@ export function ButtonSelectorOption({
       {children}
     </label>
   );
-}
+});
