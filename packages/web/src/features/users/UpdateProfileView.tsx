@@ -76,10 +76,10 @@ export default function UpdateProfileView() {
             <TextInput
               id="email"
               type="email"
-              hasErrors={!!formContext.formState.errors.email}
               className="w-full"
               autoComplete="email"
               aria-describedby="email-error"
+              hasErrors={!!formContext.formState.errors.email}
               {...formContext.register('email', {
                 required: true,
               })}
@@ -99,6 +99,7 @@ export default function UpdateProfileView() {
               className="w-full"
               autoComplete="name"
               aria-describedby="name-error"
+              hasErrors={!!formContext.formState.errors.name}
               {...formContext.register('name', { required: true })}
             />
             <InputError
@@ -117,6 +118,7 @@ export default function UpdateProfileView() {
               className="w-full"
               autoComplete="new-password"
               aria-describedby="password-error"
+              hasErrors={!!formContext.formState.errors.password}
               {...formContext.register('password', {
                 required: true,
                 minLength: 8,
@@ -140,8 +142,8 @@ export default function UpdateProfileView() {
               id="confirm-password"
               className="w-full"
               autoComplete="new-password"
-              confirms="password"
               aria-describedby="confirm-password-error"
+              hasErrors={!!formContext.formState.errors.confirmPassword}
               {...formContext.register('confirmPassword', {
                 required: true,
                 deps: 'password',

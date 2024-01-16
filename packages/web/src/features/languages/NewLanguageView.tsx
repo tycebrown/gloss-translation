@@ -51,8 +51,8 @@ export default function NewLanguageView() {
     }
   }
   return (
-    <View fitToScreen className="flex justify-center items-start">
-      <Card className="mx-4 mt-4 w-96 flex-shrink p-6">
+    <View fitToScreen className="flex items-start justify-center">
+      <Card className="flex-shrink p-6 mx-4 mt-4 w-96">
         <ViewTitle>{t('languages:new_language')}</ViewTitle>
         <Form context={formContext} onSubmit={onSubmit}>
           <div className="mb-2">
@@ -61,14 +61,16 @@ export default function NewLanguageView() {
             </FormLabel>
             <TextInput
               id="code"
-              name="code"
               className="w-full"
               autoComplete="off"
-              required
-              validate={{
-                valid: (code: string) => languageCodes.includes(code),
-              }}
               aria-describedby="code-error"
+              hasErrors={!!formContext.formState.errors.code}
+              {...formContext.register('code', {
+                required: true,
+                validate: {
+                  valid: (code: string) => languageCodes.includes(code),
+                },
+              })}
             />
             <InputError
               id="code-error"
@@ -85,11 +87,11 @@ export default function NewLanguageView() {
             </FormLabel>
             <TextInput
               id="name"
-              name="name"
               className="w-full"
               autoComplete="off"
-              required
               aria-describedby="name-error"
+              hasErrors={!!formContext.formState.errors.name}
+              {...formContext.register('name', { required: true })}
             />
             <InputError
               id="name-error"

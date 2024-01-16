@@ -34,7 +34,7 @@ export function VerseSelector({ verseId, onVerseChange }: VerseSelectorProps) {
   };
 
   return (
-    <div className="flex gap-4 items-center flex-row">
+    <div className="flex flex-row items-center gap-4">
       <TextInput
         name="verseReference"
         autoComplete="off"

@@ -79,7 +79,7 @@ const ConfirmationDialog = forwardRef<
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
+          <div className="flex items-center justify-center min-h-full p-4 text-center">
             <Transition.Child
               as={Fragment}
               enter="ease-out duration-300"
@@ -89,14 +89,14 @@ const ConfirmationDialog = forwardRef<
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-md flex flex-col gap-2 transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+              <Dialog.Panel className="flex flex-col w-full max-w-md gap-2 p-6 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl">
                 <Dialog.Title
                   as="h3"
                   className="text-lg font-medium leading-6 text-gray-900"
                 >
                   {title}
                 </Dialog.Title>
-                <p className="text-sm text-red-500 font-bold">{description}</p>
+                <p className="text-sm font-bold text-red-500">{description}</p>
                 <p id="prompt" className="text-sm text-gray-600">
                   {t('common:confirm_prompt', { value: confirmationValue })}
                 </p>
@@ -107,16 +107,16 @@ const ConfirmationDialog = forwardRef<
                     className="w-full"
                     autoComplete="off"
                     required
-                    onChange={(event) =>
+                    onChange={async (event) =>
                       setEnableConfirmationButton(
                         event.target.value === confirmationValue
                       )
                     }
                     aria-describedby="prompt"
                   />
-                  <div className="mt-4 gap-4 flex flex-row justify-end">
+                  <div className="flex flex-row justify-end gap-4 mt-4">
                     <button
-                      className="focus:underline outline-none"
+                      className="outline-none focus:underline"
                       type="button"
                       onClick={() => handleResult(false)}
                     >

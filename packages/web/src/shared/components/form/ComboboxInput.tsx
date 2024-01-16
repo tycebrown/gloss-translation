@@ -22,7 +22,6 @@ export interface ComboboxItem {
 interface ComboboxInputProps
   extends Omit<ComponentProps<'input'>, 'value' | 'onChange' | 'ref'> {
   className?: string;
-  name: string;
   items: ComboboxItem[];
   value?: string;
   defaultValue?: string;

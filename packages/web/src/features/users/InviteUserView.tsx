@@ -43,8 +43,8 @@ export default function InviteUserView() {
   };
 
   return (
-    <View fitToScreen className="flex justify-center items-start">
-      <Card className="mx-4 mt-4 w-96 flex-shrink p-6">
+    <View fitToScreen className="flex items-start justify-center">
+      <Card className="flex-shrink p-6 mx-4 mt-4 w-96">
         <ViewTitle>{t('users:invite_user')}</ViewTitle>
         <Form context={formContext} onSubmit={onSubmit}>
           <div className="mb-4">
@@ -53,11 +53,11 @@ export default function InviteUserView() {
             </FormLabel>
             <TextInput
               id="email"
-              name="email"
               className="w-full"
               autoComplete="off"
-              required
               aria-describedby="email-error"
+              hasErrors={!!formContext.formState.errors.email}
+              {...formContext.register('email', { required: true })}
             />
             <InputError
               id="email-error"

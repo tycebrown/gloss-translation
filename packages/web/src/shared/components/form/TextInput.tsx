@@ -1,34 +1,16 @@
-import { ComponentProps, forwardRef, useImperativeHandle, useRef } from 'react';
-import { useFormContext } from 'react-hook-form';
+import { ComponentProps, forwardRef } from 'react';
+import { UseFormRegisterReturn } from 'react-hook-form';
 
-export interface TextInputProps extends ComponentProps<'input'> {
-  name: string;
-  hasErrors: boolean;
-}
+export type TextInputProps = ComponentProps<'input'> &
+  Partial<Omit<UseFormRegisterReturn, 'ref'>> & {
+    hasErrors?: boolean;
+  };
 
-export interface TextInputRef {
-  focus(): void;
-}
-
-const TextInput = forwardRef<TextInputRef, TextInputProps>(
-  ({ className = '', name, hasErrors, ...props }, ref) => {
-    const inputRef = useRef<HTMLInputElement>(null);
-    useImperativeHandle(ref, () => ({
-      get value() {
-        return inputRef.current?.value ?? '';
-      },
-      set value(newValue: string | undefined) {
-        const input = inputRef.current;
-        if (input) {
-          input.value = newValue ?? '';
-        }
-      },
-      focus() {
-        inputRef.current?.focus();
-      },
-    }));
+const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
+  ({ className = '', hasErrors, ...props }, ref) => {
     return (
       <input
+        ref={ref}
         className={`
           border rounded shadow-inner py-2 px-3 h-10
           focus:outline focus:outline-2
@@ -40,7 +22,6 @@ const TextInput = forwardRef<TextInputRef, TextInputProps>(
           ${className}
         `}
         {...props}
-        ref={inputRef}
       />
     );
   }

@@ -170,12 +170,12 @@ export default function ManageLanguageView() {
             </FormLabel>
             <TextInput
               id="name"
-              name="name"
               className="w-full"
               autoComplete="off"
               defaultValue={language.data.name}
-              required
               aria-describedby="name-error"
+              hasErrors={!!formContext.formState.errors.name}
+              {...formContext.register('name', { required: true })}
             />
             <InputError
               id="name-error"

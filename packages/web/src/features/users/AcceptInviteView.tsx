@@ -111,8 +111,8 @@ export default function AcceptInviteView() {
                 id="first-name"
                 className="w-full"
                 autoComplete="given-name"
-                required
                 aria-describedby="first-name-error"
+                hasErrors={!!formContext.formState.errors.firstName}
                 {...formContext.register('firstName', { required: true })}
               />
               <InputError
@@ -129,8 +129,8 @@ export default function AcceptInviteView() {
                 id="last-name"
                 className="w-full"
                 autoComplete="family-name"
-                required
                 aria-describedby="last-name-error"
+                hasErrors={!!formContext.formState.errors.lastName}
                 {...formContext.register('lastName', { required: true })}
               />
               <InputError
@@ -149,10 +149,12 @@ export default function AcceptInviteView() {
               id="password"
               className="w-full"
               autoComplete="new-password"
-              required
-              minLength={8}
               aria-describedby="password-error"
-              {...formContext.register('password')}
+              hasErrors={!!formContext.formState.errors.password}
+              {...formContext.register('password', {
+                required: true,
+                minLength: 8,
+              })}
             />
             <InputError
               id="password-error"
@@ -172,9 +174,14 @@ export default function AcceptInviteView() {
               id="confirm-password"
               className="w-full"
               autoComplete="new-password"
-              confirms="password"
               aria-describedby="confirm-password-error"
-              {...formContext.register('confirmPassword')}
+              hasErrors={!!formContext.formState.errors.confirmPassword}
+              {...formContext.register('confirmPassword', {
+                deps: 'password',
+                validate: {
+                  confirm: (value, formState) => value === formState.password,
+                },
+              })}
             />
             <InputError
               id="confirm-password-error"
