@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { Trans, useTranslation } from 'react-i18next';
 import { LoaderFunctionArgs, useLoaderData } from 'react-router-dom';
 import apiClient from '../../shared/apiClient';
@@ -186,22 +186,23 @@ export default function ImportLanguageGlossesView() {
                           {t('languages:import_language').toUpperCase()}
                         </FormLabel>
 
-                        <ComboboxInput
-                          id="import"
-                          className="w-full"
-                          autoComplete="off"
-                          aria-describedby="import-error"
-                          items={importLanguages.data.map((language) => ({
-                            label: language,
-                            value: language,
-                          }))}
-                          {...{
-                            ...formContext.register('import', {
-                              required: true,
-                            }),
-                            onBlur: undefined,
-                            onChange: undefined,
-                          }}
+                        <Controller
+                          rules={{ required: true }}
+                          control={formContext.control}
+                          name="import"
+                          render={({ field }) => (
+                            <ComboboxInput
+                              id="import"
+                              className="w-full"
+                              autoComplete="off"
+                              aria-describedby="import-error"
+                              items={importLanguages.data.map((language) => ({
+                                label: language,
+                                value: language,
+                              }))}
+                              {...field}
+                            />
+                          )}
                         />
                       </div>
                       <div>

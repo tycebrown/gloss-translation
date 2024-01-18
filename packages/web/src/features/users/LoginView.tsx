@@ -41,7 +41,6 @@ export default function InviteUserView() {
       }
     }
   };
-  const registeredEmail = formContext.register('email', { required: true });
 
   return (
     <View fitToScreen className="flex items-start justify-center">
@@ -58,10 +57,7 @@ export default function InviteUserView() {
               autoComplete="username"
               aria-describedby="email-error"
               hasErrors={!!formContext.formState.errors.email}
-              name={registeredEmail.name}
-              onBlur={registeredEmail.onBlur}
-              onChange={registeredEmail.onChange}
-              ref={registeredEmail.ref}
+              {...formContext.register('email', { required: true })}
             />
             <InputError
               id="email-error"

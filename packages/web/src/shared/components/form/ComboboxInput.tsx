@@ -5,10 +5,17 @@ import {
   forwardRef,
   useEffect,
   useImperativeHandle,
+  useRef,
   useState,
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../Icon';
+import {
+  Controller,
+  ControllerRenderProps,
+  UseFormRegisterReturn,
+} from 'react-hook-form';
+import useMergedRef from '../../hooks/mergeRefs';
 
 const CREATE_TAG = '_create';
 const MAX_ITEMS = 1000;
@@ -18,20 +25,23 @@ export interface ComboboxItem {
   value: string;
 }
 
-// interface ComboboxInputRef {}
-interface ComboboxInputProps
-  extends Omit<ComponentProps<'input'>, 'value' | 'onChange' | 'ref'> {
-  className?: string;
-  items: ComboboxItem[];
-  value?: string;
-  defaultValue?: string;
-  hasErrors?: boolean;
-  up?: boolean;
-  onBlur?(): void;
-  onChange?(value: string): void;
-  onCreate?(text?: string): void;
-  onKeyDown?: KeyboardEventHandler<HTMLInputElement>;
-}
+type ComboboxInputProps = Omit<
+  ComponentProps<'input'>,
+  'value' | 'onChange' | 'ref'
+> &
+  Partial<Omit<ControllerRenderProps, 'ref'>> & {
+    //   Partial<Omit<UseFormRegisterReturn, 'ref' | 'onChange' | 'onBlur'>> // &
+    className?: string;
+    items: ComboboxItem[];
+    value?: string;
+    defaultValue?: string;
+    hasErrors?: boolean;
+    up?: boolean;
+    onBlur?(): void;
+    onChange?(value: string): void;
+    onCreate?(text?: string): void;
+    onKeyDown?: KeyboardEventHandler<HTMLInputElement>;
+  };
 
 const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(
   (
@@ -48,12 +58,13 @@ const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(
       onKeyDown,
       disabled,
       ...props
-    }: ComboboxInputProps,
+    },
     ref
   ) => {
     const { t } = useTranslation(['common']);
     const [normalizedInputValue, setNormalizedInputValue] = useState('');
     const [filteredItems, setFilteredItems] = useState<ComboboxItem[]>(items);
+    const inputRef = useRef<HTMLInputElement | null>(null);
 
     // If none of the items matches the input value exactly,
     // then we want to give the option of creating a new item.
@@ -114,20 +125,21 @@ const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(
           >
             <Combobox.Input
               {...props}
-              onChange={(event) =>
-                setNormalizedInputValue(event.target.value.normalize('NFD'))
-              }
-              onBlur={onBlur}
+              onChange={(event) => {
+                setNormalizedInputValue(event.target.value.normalize('NFD'));
+                onChange?.(event.target.value.normalize('NFD'));
+              }}
               className="flex-grow w-full h-10 px-3 py-2 bg-transparent rounded rounded-b focus:outline-none"
               displayValue={(value) =>
-                items.find((i) => i.value === value)?.label ?? ''
+                items.find((i) => i.value === value)?.label ??
+                normalizedInputValue
               }
               onKeyDown={(e) => {
                 if (onKeyDown) {
                   onKeyDown(e);
                 }
               }}
-              ref={ref}
+              ref={useMergedRef(ref, inputRef)}
             />
             <Combobox.Button className="w-8">
               {({ open }) => <Icon icon={open ? 'caret-up' : 'caret-down'} />}
