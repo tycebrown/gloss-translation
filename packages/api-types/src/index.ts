@@ -212,8 +212,6 @@ export interface GetLemmaResourcesResponseBody {
 export interface CommentThread {
   id: string;
   authorId: string;
-  wordId: string;
-  languageId: string;
   body: string;
   timestamp: Date;
   resolved: boolean;

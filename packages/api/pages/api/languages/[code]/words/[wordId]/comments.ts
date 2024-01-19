@@ -19,11 +19,18 @@ export default createRoute<{ code: string; wordId: string }>()
 
       const responseBody: GetWordCommentsResponseBody = {
         data: await client.commentThread.findMany({
+          select: {
+            id: true,
+            authorId: true,
+            body: true,
+            timestamp: true,
+            resolved: true,
+            replies: true,
+          },
           where: {
             wordId: req.query.wordId,
             languageId: language.id,
           },
-          include: { replies: true },
         }),
       };
 

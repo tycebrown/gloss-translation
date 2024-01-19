@@ -1,11 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CommentThread, Verse, VerseWord } from '@translation/api-types';
+import DOMPurify from 'dompurify';
 import { useTranslation } from 'react-i18next';
 import apiClient from '../../shared/apiClient';
 import { Icon } from '../../shared/components/Icon';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
 import { parseVerseId } from './verse-utils';
-import DOMPurify from 'dompurify';
 import { ReactNode, useEffect, useRef, useState } from 'react';
 import { Tab } from '@headlessui/react';
 import Button from '../../shared/components/actions/Button';
@@ -14,12 +14,11 @@ import RichText from '../../shared/components/RichText';
 import { useAccessControl } from '../../shared/accessControl';
 import useAuth from '../../shared/hooks/useAuth';
 
-/// ------------- TODO: add comment to database, (move replying)?
-
 type TranslationSidebarProps = {
   language: string;
   verse: Verse;
   wordIndex: number;
+  showComments: boolean;
   onClose: () => void;
 };
 
@@ -47,6 +46,7 @@ export const TranslationSidebar = ({
   language,
   verse,
   wordIndex,
+  showComments,
   onClose,
 }: TranslationSidebarProps) => {
   const word = verse.words[wordIndex];
@@ -205,6 +205,7 @@ function CommentsTab({ language, verse, word }: TabProps) {
       inputRef.current?.focus();
     }, [isAddingComment]);
     const { user } = useAuth();
+    const { t } = useTranslation();
 
     return (
       <>
@@ -213,14 +214,16 @@ function CommentsTab({ language, verse, word }: TabProps) {
           disabled={isAddingComment}
           onClick={() => setIsAddingComment(true)}
         >
-          <Icon icon="plus" /> Comment
+          <Icon icon="plus" /> {t('common:comment')}
         </Button>
 
         <div className={!isAddingComment ? 'hidden' : ''}>
           <RichTextInput ref={inputRef} name="commentInput" />
           <div className="h-2" />
           <div className="flex flex-row justify-end gap-3">
-            <button onClick={() => setIsAddingComment(false)}>Cancel</button>
+            <button onClick={() => setIsAddingComment(false)}>
+              {t('common:cancel')}
+            </button>
             <Button
               className="text-sm font-bold"
               onClick={() => {
@@ -230,7 +233,7 @@ function CommentsTab({ language, verse, word }: TabProps) {
                 });
               }}
             >
-              <Icon icon="comment" /> Submit
+              <Icon icon="comment" /> {t('common:submit')}
             </Button>
           </div>
         </div>
@@ -242,6 +245,7 @@ function CommentsTab({ language, verse, word }: TabProps) {
 function CommentThreadView({ comment }: { comment: CommentThread }) {
   const [isViewOpen, setIsViewOpen] = useState(false);
   const usersQuery = useQuery(['users'], () => apiClient.users.findAll());
+  const { t } = useTranslation();
 
   return (
     <div className="flex flex-col gap-1">
@@ -269,10 +273,10 @@ function CommentThreadView({ comment }: { comment: CommentThread }) {
         <RichText content={comment.body} />
         <div className="flex flex-row gap-2">
           <button className="font-bold">
-            <Icon icon="check" /> Resolve
+            <Icon icon="check" /> {t('translate:resolve')}
           </button>
           <button className="font-bold">
-            <Icon icon="reply" /> Reply
+            <Icon icon="reply" /> {t('translate:reply')}
           </button>
         </div>
       </div>

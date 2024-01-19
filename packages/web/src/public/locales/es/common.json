@@ -3,9 +3,11 @@
   "app_name": "Herramientas Bíblicas Globales",
   "cancel": "Cancelar",
   "close": "cerrar",
+  "coming_soon": "Muy pronto",
   "confirm": "Confirmar",
   "confirm_prompt": "Escriba '{{value}}' para confirmar su decisión.",
   "create": "Crear",
+  "comment": "Comentario",
   "direction": {
     "down": "abajo",
     "up": "arriba"
@@ -16,6 +18,16 @@
   "next": "Siguiente",
   "not_found": "No Encontrado",
   "not_found_message": "No pudimos encontrar lo que estás buscando.",
+  "submit": "Entregar",
+  "rich_text": {
+    "bold_tooltip": "Negrita (Ctrl+B)",
+    "italic_tooltip": "Cursiva (Ctrl+I)",
+    "strike_tooltip": "Tachado (Ctrl+I)",
+    "bullet_list_tooltip": "Lista con viñetas",
+    "ordered_list_tooltip": "Lista numerada",
+    "indent_tooltip": "Sangrar (Tab)",
+    "outdent_tooltip": "Anular sangrado (Shift+Tab)"
+  },
   "submitting": "Sumisión",
   "success": "Éxito",
   "too_many_options": "Demasiadas opciones para mostrar. Por favor, filtre más.",
