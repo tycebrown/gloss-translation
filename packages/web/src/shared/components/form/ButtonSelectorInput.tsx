@@ -3,10 +3,8 @@ import { useFormContext } from 'react-hook-form';
 
 interface ButtonSelectorContextValue {
   name: string;
-  value?: string;
-  onChange?(value: string): void;
   defaultValue?: string;
-  hasErrors: boolean;
+  required?: boolean;
 }
 
 const ButtonSelectorContext = createContext<ButtonSelectorContextValue | null>(
@@ -14,31 +12,24 @@ const ButtonSelectorContext = createContext<ButtonSelectorContextValue | null>(
 );
 
 export interface ButtonSelectorInputProps
-  extends Omit<
-    ComponentProps<'fieldset'>,
-    'defaultValue' | 'value' | 'onChange'
-  > {
+  extends Omit<ComponentProps<'fieldset'>, 'defaultValue'> {
   name: string;
-  value?: string;
-  onChange?(value: string): void;
   defaultValue?: string;
+  required?: boolean;
 }
 
 export function ButtonSelectorInput({
-  value,
-  onChange,
   children,
   name,
   defaultValue,
+  required,
   ...props
 }: ButtonSelectorInputProps) {
   const formContext = useFormContext();
-  const hasErrors = !!(name && formContext?.getFieldState(name).error);
+  const hasErrors = !!formContext?.formState.errors[name];
 
   return (
-    <ButtonSelectorContext.Provider
-      value={{ name, defaultValue, hasErrors, value, onChange }}
-    >
+    <ButtonSelectorContext.Provider value={{ name, defaultValue, required }}>
       <fieldset
         className={`
           inline-block rounded
@@ -70,6 +61,12 @@ export function ButtonSelectorOption({
   if (!selectorContext)
     throw new Error('ButtonSelectorOption must be within a ButtonSelector');
 
+  const formContext = useFormContext();
+  const hasErrors = !!formContext?.formState.errors[selectorContext.name];
+  const registerProps = formContext?.register(selectorContext.name, {
+    required: selectorContext.required,
+  });
+
   return (
     <label
       className={`
@@ -78,27 +75,16 @@ export function ButtonSelectorOption({
         rtl:last:rounded-l rtl:last:border-l rtl:first:rounded-r
         [&:has(:checked)]:bg-slate-900 [&:has(:checked)]:text-white
         shadow-inner [&:has(:checked)]:shadow-none
-        ${
-          selectorContext.hasErrors
-            ? 'border-red-700 shadow-red-100'
-            : 'border-slate-400'
-        }
+        ${hasErrors ? 'border-red-700 shadow-red-100' : 'border-slate-400'}
       `}
     >
       <input
+        {...registerProps}
         className="absolute opacity-0"
         type="radio"
         name={selectorContext.name}
+        defaultChecked={selectorContext.defaultValue === value}
         value={value}
-        checked={
-          selectorContext.value ? selectorContext.value === value : undefined
-        }
-        defaultChecked={
-          selectorContext.defaultValue
-            ? selectorContext.defaultValue === value
-            : undefined
-        }
-        onChange={(e) => selectorContext.onChange?.(e.target.value)}
       />
       {children}
     </label>

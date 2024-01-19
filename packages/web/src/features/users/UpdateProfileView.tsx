@@ -1,12 +1,12 @@
 import { useTranslation } from 'react-i18next';
-import { useForm, SubmitHandler } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import Card from '../../shared/components/Card';
 import FormLabel from '../../shared/components/form/FormLabel';
 import TextInput from '../../shared/components/form/TextInput';
 import View from '../../shared/components/View';
 import ViewTitle from '../../shared/components/ViewTitle';
 import apiClient from '../../shared/apiClient';
-import Form from '../../shared/components/form/Form';
+import Form, { SubmitHandler } from '../../shared/components/form/Form';
 import InputError from '../../shared/components/form/InputError';
 import Button from '../../shared/components/actions/Button';
 import SubmittingIndicator from '../../shared/components/form/SubmittingIndicator';
@@ -42,7 +42,11 @@ export default function UpdateProfileView() {
     }
   }, [setValue, user]);
 
-  async function onSubmit({ email, name, password }: FormData) {
+  const onSubmit: SubmitHandler<FormData> = async ({
+    email,
+    name,
+    password,
+  }) => {
     try {
       if (user) {
         await apiClient.users.update({
@@ -62,7 +66,7 @@ export default function UpdateProfileView() {
     } catch (error) {
       flash.error(`${error}`);
     }
-  }
+  };
 
   if (!user) return null;
 
@@ -88,13 +92,12 @@ export default function UpdateProfileView() {
               {t('users:email').toUpperCase()}
             </FormLabel>
             <TextInput
-              {...formContext.register('email', {
-                required: true,
-              })}
               id="email"
+              name="email"
               type="email"
               className="w-full"
               autoComplete="email"
+              required
               aria-describedby="email-error"
             />
             <InputError
@@ -108,12 +111,11 @@ export default function UpdateProfileView() {
               {t('common:name').toUpperCase()}
             </FormLabel>
             <TextInput
-              {...formContext.register('name', {
-                required: true,
-              })}
               id="name"
+              name="name"
               className="w-full"
               autoComplete="name"
+              required
               aria-describedby="name-error"
             />
             <InputError
@@ -127,13 +129,12 @@ export default function UpdateProfileView() {
               {t('users:password').toUpperCase()}
             </FormLabel>
             <TextInput
-              {...formContext.register('password', {
-                minLength: 8,
-              })}
               type="password"
               id="password"
+              name="password"
               className="w-full"
               autoComplete="new-password"
+              minLength={8}
               aria-describedby="password-error"
             />
             <InputError
@@ -150,16 +151,12 @@ export default function UpdateProfileView() {
               {t('users:confirm_password').toUpperCase()}
             </FormLabel>
             <TextInput
-              {...formContext.register('confirmPassword', {
-                validate: {
-                  confirms: (value: unknown) =>
-                    value === formContext.getValues().password,
-                },
-              })}
               type="password"
               id="confirm-password"
+              name="confirmPassword"
               className="w-full"
               autoComplete="new-password"
+              confirms="password"
               aria-describedby="confirm-password-error"
             />
             <InputError

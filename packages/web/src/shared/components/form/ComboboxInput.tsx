@@ -6,10 +6,11 @@ import {
   useEffect,
   useState,
 } from 'react';
-import { useFormContext } from 'react-hook-form';
+import { Controller, useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../Icon';
 
+const CREATE_TAG = '_create';
 const MAX_ITEMS = 1000;
 
 export interface ComboboxItem {
@@ -17,25 +18,85 @@ export interface ComboboxItem {
   value: string;
 }
 
+export type ComboboxInputProps = BaseComboboxInputProps & {
+  required?: boolean;
+  isolate?: boolean;
+};
+
+export default function ComboboxInput(props: ComboboxInputProps) {
+  const context = useFormContext();
+
+  if (context && !props.isolate) {
+    return (
+      <Controller
+        control={context.control}
+        name={props.name}
+        defaultValue={props.defaultValue}
+        rules={{ required: props.required }}
+        render={({ field, fieldState }) => (
+          <BaseComboboxInput
+            {...field}
+            items={props.items}
+            hasErrors={!!fieldState.error}
+          />
+        )}
+      />
+    );
+  } else {
+    const {
+      className,
+      name,
+      items,
+      value,
+      defaultValue,
+      hasErrors,
+      up,
+      onBlur,
+      onChange,
+      onCreate,
+      onKeyDown,
+    } = props;
+    return (
+      <BaseComboboxInput
+        className={className}
+        name={name}
+        items={items}
+        value={value}
+        defaultValue={defaultValue}
+        hasErrors={hasErrors}
+        up={up}
+        onBlur={onBlur}
+        onChange={onChange}
+        onCreate={onCreate}
+        onKeyDown={onKeyDown}
+      />
+    );
+  }
+}
+
 interface BaseComboboxInputProps
   extends Omit<ComponentProps<'input'>, 'value' | 'onChange' | 'ref'> {
   className?: string;
-  name?: string;
+  name: string;
   items: ComboboxItem[];
   value?: string;
   defaultValue?: string;
+  hasErrors?: boolean;
   up?: boolean;
   onBlur?(): void;
   onChange?(value: string): void;
+  onCreate?(text?: string): void;
   onKeyDown?: KeyboardEventHandler<HTMLInputElement>;
 }
 
-const ComboboxInput = forwardRef<HTMLInputElement, BaseComboboxInputProps>(
+const BaseComboboxInput = forwardRef<HTMLInputElement, BaseComboboxInputProps>(
   (
     {
       className = '',
+      hasErrors,
       value = '',
       onChange,
+      onCreate,
       onBlur,
       items,
       name,
@@ -50,9 +111,6 @@ const ComboboxInput = forwardRef<HTMLInputElement, BaseComboboxInputProps>(
     const [normalizedInputValue, setNormalizedInputValue] = useState('');
     const [filteredItems, setFilteredItems] = useState<ComboboxItem[]>(items);
 
-    const formContext = useFormContext();
-    const hasErrors = !!(name && formContext?.getFieldState(name).error);
-
     // If none of the items matches the input value exactly,
     // then we want to give the option of creating a new item.
     useEffect(() => {
@@ -62,11 +120,31 @@ const ComboboxInput = forwardRef<HTMLInputElement, BaseComboboxInputProps>(
             ignoreDiacritics(normalizedInputValue.toLowerCase())
           )
         );
-        setFilteredItems(filteredItems);
+        const noExactMatch = filteredItems.every(
+          (item) => item.label.normalize('NFD') !== normalizedInputValue
+        );
+        if (noExactMatch && !!onCreate) {
+          setFilteredItems([
+            { value: CREATE_TAG, label: normalizedInputValue },
+            ...filteredItems,
+          ]);
+        } else {
+          setFilteredItems(filteredItems);
+        }
       } else {
         setFilteredItems(items);
       }
-    }, [items, normalizedInputValue]);
+    }, [items, normalizedInputValue, onCreate]);
+
+    function onComboboxChange(newValue: string) {
+      if (newValue === CREATE_TAG) {
+        onCreate?.(normalizedInputValue);
+      } else {
+        if (newValue !== value) {
+          onChange?.(newValue);
+        }
+      }
+    }
 
     return (
       <div
@@ -76,7 +154,7 @@ const ComboboxInput = forwardRef<HTMLInputElement, BaseComboboxInputProps>(
       >
         <Combobox
           value={value}
-          onChange={onChange}
+          onChange={onComboboxChange}
           name={name}
           disabled={disabled}
         >
@@ -126,7 +204,14 @@ const ComboboxInput = forwardRef<HTMLInputElement, BaseComboboxInputProps>(
                   key={item.value}
                   value={item.value}
                 >
-                  {item.label}
+                  {item.value === CREATE_TAG ? (
+                    <>
+                      <Icon icon="add" /> "
+                      <span className="italic">{item.label}</span>"
+                    </>
+                  ) : (
+                    item.label
+                  )}
                 </Combobox.Option>
               ))
             )}
@@ -136,8 +221,6 @@ const ComboboxInput = forwardRef<HTMLInputElement, BaseComboboxInputProps>(
     );
   }
 );
-
-export default ComboboxInput;
 
 /**
  * Return a version of the word where all diacritics have been removed.

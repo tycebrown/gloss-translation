@@ -1,13 +1,50 @@
 import { forwardRef, useState } from 'react';
+import { Controller, useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../Icon';
 import Button from '../actions/Button';
 import ComboboxInput from './ComboboxInput';
-interface SortableMultiselectInputProps {
+
+export type SortableMultiselectInputProps =
+  BaseSortableMultiselectInputProps & {
+    required?: boolean;
+    isolate?: boolean;
+  };
+
+export default function SortableMultiselectInput(
+  props: SortableMultiselectInputProps
+) {
+  const context = useFormContext();
+
+  if (context && !props.isolate) {
+    return (
+      <Controller
+        control={context.control}
+        name={props.name}
+        defaultValue={props.defaultValue}
+        rules={{ required: props.required }}
+        render={({ field, fieldState }) => (
+          <BaseSortableMultiselectInput
+            {...field}
+            items={props.items}
+            hasErrors={!!fieldState.error}
+            placeholder={props.placeholder}
+          />
+        )}
+      />
+    );
+  } else {
+    return <BaseSortableMultiselectInput {...props} />;
+  }
+}
+
+interface BaseSortableMultiselectInputProps {
   className?: string;
   name: string;
   items: ItemType[];
   value?: string[];
+  defaultValue?: string[];
+  hasErrors?: boolean;
   placeholder?: string;
   onChange?(value: string[]): void;
   onBlur?(): void;
@@ -15,9 +52,9 @@ interface SortableMultiselectInputProps {
 
 type ItemType = { label: string; value: string };
 
-const SortableMultiselectInput = forwardRef<
+const BaseSortableMultiselectInput = forwardRef<
   HTMLInputElement,
-  SortableMultiselectInputProps
+  BaseSortableMultiselectInputProps
 >(({ className = '', value, onChange, onBlur, items }, ref) => {
   const selected: string[] = value ?? [];
   const { t } = useTranslation(['common']);
@@ -107,6 +144,7 @@ const SortableMultiselectInput = forwardRef<
           items={availableNewItems}
           disabled={availableNewItems.length === 0}
           autoComplete="off"
+          isolate
         />
         <Button onClick={addItem} onBlur={onBlur}>
           <Icon icon="add" />
@@ -116,5 +154,3 @@ const SortableMultiselectInput = forwardRef<
     </div>
   );
 });
-
-export default SortableMultiselectInput;

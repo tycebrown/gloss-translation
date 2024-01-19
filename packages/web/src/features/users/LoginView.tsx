@@ -6,7 +6,7 @@ import TextInput from '../../shared/components/form/TextInput';
 import View from '../../shared/components/View';
 import ViewTitle from '../../shared/components/ViewTitle';
 import apiClient from '../../shared/apiClient';
-import Form from '../../shared/components/form/Form';
+import Form, { SubmitHandler } from '../../shared/components/form/Form';
 import InputError from '../../shared/components/form/InputError';
 import Button from '../../shared/components/actions/Button';
 import SubmittingIndicator from '../../shared/components/form/SubmittingIndicator';
@@ -28,7 +28,7 @@ export default function InviteUserView() {
   const flash = useFlash();
 
   const formContext = useForm<FormData>();
-  async function onSubmit({ email, password }: FormData) {
+  const onSubmit: SubmitHandler<FormData> = async ({ email, password }) => {
     try {
       await apiClient.auth.login({ email, password });
       refreshAuth();
@@ -40,7 +40,7 @@ export default function InviteUserView() {
         flash.error(`${error}`);
       }
     }
-  }
+  };
 
   return (
     <View fitToScreen className="flex justify-center items-start">
@@ -52,12 +52,11 @@ export default function InviteUserView() {
               {t('users:email').toUpperCase()}
             </FormLabel>
             <TextInput
-              {...formContext.register('email', {
-                required: true,
-              })}
               id="email"
+              name="email"
               className="w-full"
               autoComplete="username"
+              required
               aria-describedby="email-error"
             />
             <InputError
@@ -73,13 +72,12 @@ export default function InviteUserView() {
               {t('users:password').toUpperCase()}
             </FormLabel>
             <TextInput
-              {...formContext.register('password', {
-                required: true,
-              })}
               id="password"
               type="password"
+              name="password"
               className="w-full"
               autoComplete="current-password"
+              required
               aria-describedby="password-error"
             />
             <InputError
