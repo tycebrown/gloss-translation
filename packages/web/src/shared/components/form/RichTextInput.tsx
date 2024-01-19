@@ -1,7 +1,7 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { Icon } from '../Icon';
-import { ComponentProps, forwardRef, useImperativeHandle, useRef } from 'react';
+import { ComponentProps, forwardRef, useRef } from 'react';
 
 export interface RichTextInputProps {
   name: string;
@@ -58,30 +58,10 @@ const RichTextInput = forwardRef<RichTextInputRef, RichTextInputProps>(
       },
     });
 
-    // We expose a ref that can be consumed by react hook form without a Controller.
-    // This requires the ability to set the value, and focus.
-    useImperativeHandle(ref, () => ({
-      get value() {
-        return editor?.getHTML();
-      },
-      set value(value: string | undefined) {
-        if (editor?.getHTML() === value) return;
-
-        editor?.commands.setContent(value ?? '', false);
-        const input = hiddenInput.current;
-        if (input) {
-          input.value = value ?? '';
-        }
-      },
-      focus() {
-        editor?.commands.focus();
-      },
-    }));
-
     return (
       <div className="border rounded border-slate-400 focus-within:outline focus-within:outline-2 focus-within:outline-blue-600">
         <input type="hidden" ref={hiddenInput} name={name} />
-        <div className="border-slate-400 border-b p-1 flex gap-3">
+        <div className="flex gap-3 p-1 border-b border-slate-400">
           <div className="flex gap-1">
             <RichTextInputButton
               active={editor?.isActive('bold')}
@@ -138,7 +118,7 @@ const RichTextInput = forwardRef<RichTextInputRef, RichTextInputProps>(
             />
           </div>
         </div>
-        <EditorContent editor={editor} className="py-2 px-3" />
+        <EditorContent editor={editor} className="px-3 py-2" />
       </div>
     );
   }
