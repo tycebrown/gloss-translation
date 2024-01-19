@@ -80,7 +80,6 @@ const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(
     }, [items, normalizedInputValue, onCreate]);
 
     function onComboboxChange(newValue: string) {
-      console.log('COMBOBOX CHANGED: ' + newValue);
       if (newValue === CREATE_TAG) {
         onCreate?.(normalizedInputValue);
       } else {
