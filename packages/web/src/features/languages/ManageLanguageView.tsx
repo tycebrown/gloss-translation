@@ -1,14 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { LanguageRole, TextDirection } from '@translation/api-types';
-import { JSXElementConstructor, ReactElement, Ref, useState } from 'react';
-import {
-  Controller,
-  ControllerFieldState,
-  ControllerRenderProps,
-  FieldValues,
-  UseFormStateReturn,
-  useForm,
-} from 'react-hook-form';
+import { useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useLoaderData, useParams } from 'react-router-dom';
 import apiClient from '../../shared/apiClient';
@@ -258,12 +251,19 @@ export default function ManageLanguageView() {
             <FormLabel htmlFor="bibleTranslationIds">
               {t('languages:bible_translations').toUpperCase()}
             </FormLabel>
-            <SortableMultiselectInput
+            <Controller
+              control={formContext.control}
               name="bibleTranslationIds"
-              className="w-full"
               defaultValue={language.data.bibleTranslationIds}
-              items={translationOptions}
-              placeholder={t('languages:select_translations').toString()}
+              render={({ field, fieldState }) => (
+                <SortableMultiselectInput
+                  {...field}
+                  hasErrors={!!fieldState.error}
+                  className="w-full"
+                  items={translationOptions}
+                  placeholder={t('languages:select_translations').toString()}
+                />
+              )}
             />
           </div>
           <div>
