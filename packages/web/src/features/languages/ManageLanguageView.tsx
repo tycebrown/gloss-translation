@@ -123,7 +123,7 @@ export default function ManageLanguageView() {
   const flash = useFlash();
 
   const { data: language } = useLanguageQuery(params.code);
-  // const { data: members } = useLanguageMembersQuery(params.code);
+  const { data: members } = useLanguageMembersQuery(params.code);
   const { fonts, translations } = useLoaderData() as {
     fonts: string[];
     translations: BibleTranslation[];
@@ -140,8 +140,6 @@ export default function ManageLanguageView() {
 
   const formContext = useForm<FormData>();
   async function onSubmit(data: FormData) {
-    console.log(JSON.stringify(data));
-    return;
     try {
       await apiClient.languages.update(language.data.code, {
         name: data.name,
@@ -156,20 +154,6 @@ export default function ManageLanguageView() {
   }
 
   const [previewFont, setPreviewFont] = useState(language.data.font);
-  const [members, setMembers] = useState([
-    {
-      email: 'anemail@gmail.com',
-      name: 'No Idea',
-      roles: [LanguageRole.Admin],
-      userId: '018D1F11-70FF-D94F-2B0E-D58234320FC3',
-    },
-    {
-      email: 'anotheremail@gmail.com',
-      name: 'Who Knew',
-      roles: [LanguageRole.Translator],
-      userId: '018D1F11-70FF-D94F-2B0E-D57234320FC3',
-    },
-  ]);
 
   return (
     <View fitToScreen className="flex items-start justify-center">
@@ -291,7 +275,7 @@ export default function ManageLanguageView() {
             </Link>
           </ListRowAction>
           <ListBody>
-            {members.map((member) => (
+            {members.data.map((member) => (
               <ListRow key={member.userId}>
                 <ListCell header>{member.name}</ListCell>
                 <ListCell>{member.email}</ListCell>
@@ -311,15 +295,11 @@ export default function ManageLanguageView() {
                       },
                     ]}
                     onChange={(roles) =>
-                      setMembers([
-                        ...(members.filter(
-                          (m) => m.email !== member.email
-                        ) as any[]),
-                        {
-                          ...members.filter((m) => m.email === member.email)[0],
-                          roles,
-                        },
-                      ])
+                      updateMemberMutation.mutate({
+                        code: params.code,
+                        userId: member.userId,
+                        roles: roles as LanguageRole[],
+                      })
                     }
                   />
                 </ListCell>
