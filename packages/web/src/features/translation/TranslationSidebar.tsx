@@ -248,7 +248,7 @@ function CommentThreadView({ comment }: { comment: CommentThread }) {
   const { t } = useTranslation();
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col">
       <div className="flex flex-col px-3 py-2 border border-slate-400 gap-1.5 rounded">
         <div className="flex flex-row justify-between">
           <div className="font-bold">
@@ -309,11 +309,11 @@ function CommentThreadView({ comment }: { comment: CommentThread }) {
               </li>
             ))}
           </ol>
-          <div>
+          {comment.replies.length > 0 && (
             <button className="ml-12 font-bold">
-              <Icon icon="reply" /> Reply
+              <Icon icon="reply" /> {t('translate:reply')}
             </button>
-          </div>
+          )}
         </>
       )}
     </div>
