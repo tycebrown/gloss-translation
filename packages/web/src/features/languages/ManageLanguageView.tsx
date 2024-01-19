@@ -1,7 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { LanguageRole, TextDirection } from '@translation/api-types';
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { JSXElementConstructor, ReactElement, Ref, useState } from 'react';
+import {
+  Controller,
+  ControllerFieldState,
+  ControllerRenderProps,
+  FieldValues,
+  UseFormStateReturn,
+  useForm,
+} from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useLoaderData, useParams } from 'react-router-dom';
 import apiClient from '../../shared/apiClient';
@@ -187,14 +194,24 @@ export default function ManageLanguageView() {
             <FormLabel htmlFor="font">
               {t('languages:font').toUpperCase()}
             </FormLabel>
-            <ComboboxInput
-              id="font"
+            <Controller
+              control={formContext.control}
               name="font"
-              className="w-full h-10"
-              required
               defaultValue={previewFont}
-              items={fonts.map((font) => ({ label: font, value: font }))}
-              onChange={(font) => setPreviewFont(font)}
+              rules={{ required: true }}
+              render={({ field, fieldState }) => (
+                <ComboboxInput
+                  id="font"
+                  className="w-full h-10"
+                  items={fonts.map((font) => ({ label: font, value: font }))}
+                  hasErrors={!!fieldState.error}
+                  {...field}
+                  onChange={(font) => {
+                    field.onChange(font);
+                    setPreviewFont(font);
+                  }}
+                />
+              )}
             />
           </div>
           <div className="mb-2">
@@ -203,14 +220,20 @@ export default function ManageLanguageView() {
             </FormLabel>
             <div>
               <ButtonSelectorInput
-                name="textDirection"
+                name={'textDirection'}
                 aria-labelledby="text-direction-label"
                 defaultValue={language.data.textDirection}
               >
-                <ButtonSelectorOption value={TextDirection.LTR}>
+                <ButtonSelectorOption
+                  value={TextDirection.LTR}
+                  {...formContext.register('textDirection')}
+                >
                   {t('languages:ltr')}
                 </ButtonSelectorOption>
-                <ButtonSelectorOption value={TextDirection.RTL}>
+                <ButtonSelectorOption
+                  value={TextDirection.RTL}
+                  {...formContext.register('textDirection')}
+                >
                   {t('languages:rtl')}
                 </ButtonSelectorOption>
               </ButtonSelectorInput>

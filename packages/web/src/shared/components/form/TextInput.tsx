@@ -1,10 +1,13 @@
 import { ComponentProps, forwardRef } from 'react';
-import { UseFormRegisterReturn } from 'react-hook-form';
 
-export type TextInputProps = ComponentProps<'input'> &
-  Partial<Omit<UseFormRegisterReturn, 'ref'>> & {
-    hasErrors?: boolean;
-  };
+export type TextInputProps = ComponentProps<'input'> & {
+  name: string;
+  onChange?(e: { target: HTMLInputElement }): void;
+  onBlur?(e: { target: HTMLInputElement }): void;
+  'aria-labelledby'?: string;
+  'aria-label'?: string;
+  hasErrors?: boolean;
+};
 
 const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
   ({ className = '', hasErrors, ...props }, ref) => {
