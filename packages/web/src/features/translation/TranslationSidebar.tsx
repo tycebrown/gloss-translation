@@ -1,13 +1,13 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CommentThread, Verse, VerseWord } from '@translation/api-types';
+import { Tab } from '@headlessui/react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import DOMPurify from 'dompurify';
 import { useTranslation } from 'react-i18next';
 import apiClient from '../../shared/apiClient';
 import { Icon } from '../../shared/components/Icon';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
 import { parseVerseId } from './verse-utils';
-import DOMPurify from 'dompurify';
 import { ReactNode, useEffect, useRef, useState } from 'react';
-import { Tab } from '@headlessui/react';
 import Button from '../../shared/components/actions/Button';
 import RichTextInput from '../../shared/components/form/RichTextInput';
 import RichText from '../../shared/components/RichText';
@@ -18,94 +18,19 @@ type TranslationSidebarProps = {
   language: string;
   verse: Verse;
   wordIndex: number;
+  showComments: boolean;
   onClose: () => void;
 };
-
-type TabProps = {
-  language: string;
-  verse: Verse;
-  word: VerseWord;
-};
-
-type TabData = {
-  title: string;
-  content: (props: TabProps) => ReactNode;
-  languageUserOnly?: boolean;
-};
-
-const sidePanelTabs: TabData[] = [
-  { title: 'Lexicon', content: LexiconTab },
-  { title: 'Notes', content: NotesTab },
-  { title: 'Usage', content: UsageTab },
-  { title: 'Chapter', content: ChapterTab },
-  { title: 'Comments', content: CommentsTab, languageUserOnly: true },
-];
 
 export const TranslationSidebar = ({
   language,
   verse,
   wordIndex,
+  showComments,
   onClose,
 }: TranslationSidebarProps) => {
   const word = verse.words[wordIndex];
   const { bookId } = parseVerseId(verse.id);
-  const isHebrew = bookId < 40;
-  const { t } = useTranslation(['common', 'translate']);
-  const userCan = useAccessControl();
-  const isLanguageUser =
-    userCan('translate', { type: 'Language', id: language }) ||
-    userCan('administer', 'User');
-  const displayedTabs = sidePanelTabs.filter(
-    ({ languageUserOnly }) => !languageUserOnly || isLanguageUser
-  );
-  return (
-    <div
-      className="
-        border-t h-[320px] flex flex-col gap-4 pt-3 flex-shrink-0
-        md:border-t-0 md:ltr:border-l md:rtl:border-r md:h-auto md:w-1/3 md:min-w-[400px] md:max-w-[480px] md:pt-0
-      "
-    >
-      <div className="ps-4">
-        <div className="flex flex-row items-center gap-4">
-          <button onClick={onClose} type="button">
-            <Icon icon="chevron-down" className="block md:hidden" />
-            <Icon icon="chevron-right" className="hidden md:block" />
-            <span className="sr-only">{t('common:close')}</span>
-          </button>
-          <span
-            className={isHebrew ? 'font-hebrew text-2xl' : 'font-greek text-xl'}
-          >
-            {word.text}
-          </span>
-          <span>{word.lemmaId}</span>
-        </div>
-      </div>
-      <Tab.Group>
-        <div>
-          <Tab.List className="flex flex-row gap-x-0.5 ps-1">
-            {displayedTabs.map(({ title }) => (
-              <Tab className="md:text-sm xl:text-base text-base select-none px-2 py-1 border-t-2 rounded-t-md border-x-2 relative ui-selected:bg-white ui-selected:top-0.5 bg-gray-300 outline-none">
-                {title}
-              </Tab>
-            ))}
-          </Tab.List>
-          <div className="border-t-2"></div>
-        </div>
-        <div className="px-4 overflow-y-scroll grow">
-          <Tab.Panels>
-            {displayedTabs.map((tab) => (
-              <Tab.Panel key={tab.title}>
-                <tab.content language={language} verse={verse} word={word} />
-              </Tab.Panel>
-            ))}
-          </Tab.Panels>
-        </div>
-      </Tab.Group>
-    </div>
-  );
-};
-
-function LexiconTab({ language, verse, word }: TabProps) {
   const lemmaResourcesQuery = useQuery(
     ['verse-lemma-resources', language, verse.id],
     () => apiClient.verses.findLemmaResources(verse.id)
@@ -117,50 +42,93 @@ function LexiconTab({ language, verse, word }: TabProps) {
     ['BDB', 'LSJ'].includes(resource)
   );
   const lexiconEntry = lexiconResource?.entry ?? '';
+  const { t } = useTranslation(['common', 'translate']);
+  const tabTitles = ['translate:lexicon', 'translate:notes'];
+  if (showComments) {
+    tabTitles.push('translate:comments');
+  }
+
   return (
-    <>
-      {lemmaResourcesQuery.isLoading && (
-        <div className="flex items-center justify-center w-full h-full">
-          <LoadingSpinner />
-        </div>
-      )}
-      {lemmaResourcesQuery.isSuccess && lexiconEntry && (
-        <div>
-          <div className="mb-3 text-lg font-bold me-2">
-            {lexiconResource?.resource}
-          </div>
-          <div
-            className="leading-7"
-            dangerouslySetInnerHTML={{
-              __html: DOMPurify.sanitize(lexiconEntry),
-            }}
+    <div
+      className="
+        border-t h-[320px] flex flex-col gap-4 pt-3 flex-shrink-0
+        md:border-t-0 md:ltr:border-l md:rtl:border-r md:h-auto md:w-1/3 md:min-w-[320px] md:max-w-[480px] md:pt-0 md:ps-3
+      "
+    >
+      <div className="flex flex-row items-center gap-4">
+        <button onClick={onClose} type="button">
+          <Icon icon="chevron-down" className="block sm:hidden" />
+          <Icon
+            icon="chevron-right"
+            className="hidden sm:block rtl:rotate-180"
           />
-        </div>
-      )}
-    </>
+          <span className="sr-only">{t('common:close')}</span>
+        </button>
+        <span className="text-xl font-mixed">{word.text}</span>
+        <span>{word.lemmaId}</span>
+      </div>
+      <div className="flex flex-col min-h-0 grow">
+        <Tab.Group>
+          <Tab.List className="flex flex-row -mx-4 md:-ms-3">
+            <div className="w-4 h-full border-b border-slate-400"></div>
+            {tabTitles.map((title) => (
+              <>
+                <Tab
+                  key={title}
+                  className="px-4 py-1 border rounded-t-lg border-slate-400 ui-selected:border-b-transparent focus:outline-blue-600 focus:outline focus:outline-2"
+                >
+                  {t(title)}
+                </Tab>
+                <div className="w-1 h-full border-b border-slate-400"></div>
+              </>
+            ))}
+            <div className="h-full border-b border-slate-400 grow"></div>
+          </Tab.List>
+          <Tab.Panels className="p-3 -mx-4 overflow-y-auto grow md:-ms-3">
+            <Tab.Panel>
+              {lemmaResourcesQuery.isLoading && (
+                <div className="flex items-center justify-center w-full h-full">
+                  <LoadingSpinner />
+                </div>
+              )}
+              {lemmaResourcesQuery.isSuccess && lexiconEntry && (
+                <div>
+                  <div className="mb-3 text-lg font-bold me-2">
+                    {lexiconResource?.resource}
+                  </div>
+                  <div
+                    className="leading-7 font-mixed"
+                    dangerouslySetInnerHTML={{
+                      __html: DOMPurify.sanitize(lexiconEntry),
+                    }}
+                  />
+                </div>
+              )}
+            </Tab.Panel>
+            <Tab.Panel>{t('common:coming_soon')}</Tab.Panel>
+            {showComments && (
+              <Tab.Panel>
+                <CommentsView language={language} word={word} />
+              </Tab.Panel>
+            )}
+          </Tab.Panels>
+        </Tab.Group>
+      </div>
+    </div>
   );
-}
+};
 
-function NotesTab({ language, verse, word }: TabProps) {
-  return <h1>Notes content</h1>;
+interface CommentsViewProps {
+  language: string;
+  word: VerseWord;
 }
-
-function UsageTab({ language, verse, word }: TabProps) {
-  return <h1>Usage content</h1>;
-}
-
-function ChapterTab({ language, verse, word }: TabProps) {
-  return <h1>Chapter content</h1>;
-}
-
-function CommentsTab({ language, verse, word }: TabProps) {
+function CommentsView({ language, word }: CommentsViewProps) {
   const queryClient = useQueryClient();
   const commentsQuery = useQuery({
     queryKey: ['word-comments', language, word.id],
     queryFn: () => apiClient.words.findWordComments(word.id, language),
   });
-  const wordComments = commentsQuery.isSuccess ? commentsQuery.data.data : [];
-
+  const comments = commentsQuery.isSuccess ? commentsQuery.data.data : [];
   const addCommentMutation = useMutation({
     mutationFn: ({ authorId, body }: { authorId: string; body: string }) =>
       apiClient.words.addComment({
@@ -172,11 +140,10 @@ function CommentsTab({ language, verse, word }: TabProps) {
     onSuccess: () =>
       queryClient.invalidateQueries(['word-comments', language, word.id]),
   });
-
   return (
     <>
       <div className="mt-1 mb-4">
-        <AddCommentsView addComment={addCommentMutation.mutate} />
+        <AddCommentView addComment={addCommentMutation.mutate} />
       </div>
       {commentsQuery.isLoading && (
         <div className="flex items-center justify-center w-full h-full">
@@ -184,60 +151,61 @@ function CommentsTab({ language, verse, word }: TabProps) {
         </div>
       )}
       {commentsQuery.isSuccess &&
-        wordComments.map((comment) => (
+        comments.map((comment) => (
           <div key={comment.id} className="mb-2.5">
             <CommentThreadView comment={comment} />
           </div>
         ))}
     </>
   );
+}
 
-  function AddCommentsView({
-    addComment,
-  }: {
-    addComment: (commentData: { body: string; authorId: string }) => void;
-  }) {
-    const [isAddingComment, setIsAddingComment] = useState(false);
-    const inputRef = useRef<HTMLInputElement | null>(null);
-    useEffect(() => {
-      inputRef.current?.focus();
-    }, [isAddingComment]);
-    const { user } = useAuth();
-    const { t } = useTranslation();
+function AddCommentView({
+  addComment,
+}: {
+  addComment: (commentData: { body: string; authorId: string }) => void;
+}) {
+  const [isAddingComment, setIsAddingComment] = useState(false);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, [isAddingComment]);
+  const { user } = useAuth();
+  const { t } = useTranslation();
 
-    return (
-      <>
-        <Button
-          className={`${isAddingComment ? 'mb-4' : ''} text-sm`}
-          disabled={isAddingComment}
-          onClick={() => setIsAddingComment(true)}
-        >
-          <Icon icon="plus" /> {t('common:comment')}
-        </Button>
+  return (
+    <>
+      <Button
+        className={`${isAddingComment ? 'mb-4' : ''} text-sm`}
+        disabled={isAddingComment}
+        onClick={() => setIsAddingComment(true)}
+      >
+        <Icon icon="plus" /> {t('common:comment')}
+      </Button>
 
-        <div className={!isAddingComment ? 'hidden' : ''}>
-          <RichTextInput ref={inputRef} name="commentInput" />
-          <div className="h-2" />
-          <div className="flex flex-row justify-end gap-3">
-            <button onClick={() => setIsAddingComment(false)}>
-              {t('common:cancel')}
-            </button>
-            <Button
-              className="text-sm font-bold"
-              onClick={() => {
-                addComment({
-                  authorId: user?.id ?? '',
-                  body: inputRef.current?.value ?? '',
-                });
-              }}
-            >
-              <Icon icon="comment" /> {t('common:submit')}
-            </Button>
-          </div>
+      <div className={!isAddingComment ? 'hidden' : ''}>
+        <RichTextInput name="commentBody" />
+        <div className="h-2" />
+        <div className="flex flex-row justify-end gap-3">
+          <button onClick={() => setIsAddingComment(false)}>
+            {t('common:cancel')}
+          </button>
+          <Button
+            className="text-sm font-bold"
+            onClick={() => {
+              addComment({
+                authorId: user?.id ?? '',
+                body: inputRef.current?.value ?? '',
+              });
+              setIsAddingComment(false);
+            }}
+          >
+            <Icon icon="comment" /> {t('common:submit')}
+          </Button>
         </div>
-      </>
-    );
-  }
+      </div>
+    </>
+  );
 }
 
 function CommentThreadView({ comment }: { comment: CommentThread }) {
