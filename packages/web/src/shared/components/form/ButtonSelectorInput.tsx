@@ -7,9 +7,7 @@ import {
 } from 'react';
 
 interface ButtonSelectorContextValue {
-  name: string;
   defaultValue?: string;
-  required?: boolean;
   hasErrors?: boolean;
 }
 
@@ -19,24 +17,18 @@ const ButtonSelectorContext = createContext<ButtonSelectorContextValue | null>(
 
 export interface ButtonSelectorInputProps
   extends Omit<ComponentProps<'fieldset'>, 'defaultValue'> {
-  name: string;
   defaultValue?: string;
-  required?: boolean;
   hasErrors?: boolean;
 }
 
 export function ButtonSelectorInput({
   children,
-  name,
-  required,
   defaultValue,
   hasErrors,
   ...props
 }: ButtonSelectorInputProps) {
   return (
-    <ButtonSelectorContext.Provider
-      value={{ name, defaultValue, required, hasErrors }}
-    >
+    <ButtonSelectorContext.Provider value={{ defaultValue, hasErrors }}>
       <fieldset
         className={`
           inline-block rounded
@@ -87,10 +79,8 @@ export const ButtonSelectorOption = forwardRef<
       <input
         ref={ref}
         {...props}
-        required={selectorContext.required}
         className="absolute opacity-0"
         type="radio"
-        name={selectorContext.name}
         defaultChecked={selectorContext.defaultValue === value}
         value={value}
       />

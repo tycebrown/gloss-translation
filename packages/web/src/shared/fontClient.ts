@@ -10,6 +10,7 @@ type RawFontOption = {
 
 class FontClient {
   async getFonts(): Promise<string[]> {
+    return ['Noto', 'Ariel', 'Comic-Sans'];
     const request = new Request(FONT_API, { method: 'GET', mode: 'cors' });
     const response = await fetch(request);
     let responseBody;

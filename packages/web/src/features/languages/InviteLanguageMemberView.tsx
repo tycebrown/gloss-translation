@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { ApiClientError } from '@translation/api-client';
 import Form from '../../shared/components/form/Form';
 import InputError from '../../shared/components/form/InputError';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import SubmittingIndicator from '../../shared/components/form/SubmittingIndicator';
 import Button from '../../shared/components/actions/Button';
 import { useFlash } from '../../shared/hooks/flash';
@@ -81,17 +81,22 @@ export default function InviteLanguageMemberView() {
             <FormLabel htmlFor="roles">
               {t('users:role', { count: 100 }).toUpperCase()}
             </FormLabel>
-            <MultiselectInput
-              className="w-full"
+            <Controller
               name="roles"
               defaultValue={[LanguageRole.Translator]}
-              items={[
-                { label: t('users:role_admin'), value: LanguageRole.Admin },
-                {
-                  label: t('users:role_translator'),
-                  value: LanguageRole.Translator,
-                },
-              ]}
+              render={({ field }) => (
+                <MultiselectInput
+                  {...field}
+                  className="w-full"
+                  items={[
+                    { label: t('users:role_admin'), value: LanguageRole.Admin },
+                    {
+                      label: t('users:role_translator'),
+                      value: LanguageRole.Translator,
+                    },
+                  ]}
+                />
+              )}
             />
           </div>
           <div>
