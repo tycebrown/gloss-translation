@@ -212,57 +212,85 @@ function CommentsView({ language, word }: CommentsViewProps) {
 }
 
 function CommentThreadView({ comment }: { comment: CommentThread }) {
-  const [isViewOpen, setIsViewOpen] = useState(false);
+  const [isRepliesViewOpen, setIsRepliesViewOpen] = useState(false);
   const usersQuery = useQuery(['users'], () => apiClient.users.findAll());
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   return (
-    <>
-      {usersQuery.isLoading && (
-        <div className="flex items-center justify-center w-full h-full">
-          <LoadingSpinner />
-        </div>
-      )}
-      {usersQuery.isSuccess && (
-        <div className="flex flex-col gap-1">
-          <div className="flex flex-col px-3 py-2 border border-slate-400 gap-1.5 rounded">
-            <div className="flex flex-row justify-between">
-              <div className="font-bold">
-                <button
-                  className="px-2"
-                  onClick={() => setIsViewOpen(!isViewOpen)}
-                >
-                  <Icon icon={isViewOpen ? 'caret-up' : 'caret-down'} />
-                </button>
-                {
-                  usersQuery?.data.data.find(
-                    ({ id }) => id === comment.authorId
-                  )?.name
-                }
-              </div>
-              <div className="text-sm">
-                {new Date(comment.timestamp).toLocaleDateString('en-US', {
-                  hour12: true,
-                  hour: 'numeric',
-                  minute: 'numeric',
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric',
-                })}
-              </div>
-            </div>
-            <RichText content={comment.body} />
-            <div className="flex flex-row gap-2">
-              <button className="font-bold">
-                <Icon icon="check" /> {t('translate:resolve')}
-              </button>
-              <button className="font-bold">
-                <Icon icon="reply" /> {t('translate:reply')}
-              </button>
-            </div>
+    <div className="flex flex-col">
+      <div className="flex flex-col px-3 py-2 border border-slate-400 gap-1.5 rounded">
+        <div className="flex flex-row justify-between">
+          <div className="font-bold">
+            <button
+              className="px-2"
+              onClick={() => setIsRepliesViewOpen(!isRepliesViewOpen)}
+            >
+              <Icon icon={isRepliesViewOpen ? 'caret-up' : 'caret-down'} />
+            </button>
+            {usersQuery.isLoading && <LoadingSpinner className="inline" />}
+            {usersQuery.isSuccess &&
+              usersQuery.data.data.find(({ id }) => id === comment.authorId)
+                ?.name}
+          </div>
+          <div className="text-sm">
+            {new Date(comment.timestamp).toLocaleDateString(i18n.language, {
+              hour12: true,
+              hour: 'numeric',
+              minute: 'numeric',
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric',
+            })}
           </div>
         </div>
+        <RichText content={comment.body} />
+        <div className="flex flex-row gap-2">
+          <button className="font-bold">
+            <Icon icon="check" /> {t('translate:resolve')}
+          </button>
+          <button className="font-bold">
+            <Icon icon="reply" /> {t('translate:reply')}
+          </button>
+        </div>
+      </div>
+
+      {isRepliesViewOpen && comment.replies.length > 0 && (
+        <div className="ms-6">
+          {comment.replies.map((reply) => (
+            <div
+              className="my-1 flex flex-col px-3 py-2 border border-slate-400 gap-1.5 rounded"
+              key={reply.id}
+            >
+              <div className="flex flex-row justify-between">
+                <div className="font-bold">
+                  {usersQuery.isLoading && (
+                    <LoadingSpinner className="inline" />
+                  )}
+                  {usersQuery.isSuccess &&
+                    usersQuery.data.data.find(({ id }) => id === reply.authorId)
+                      ?.name}
+                </div>
+                <div className="text-sm">
+                  {new Date(reply.timestamp).toLocaleDateString(i18n.language, {
+                    hour12: true,
+                    hour: 'numeric',
+                    minute: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                  })}
+                </div>
+              </div>
+              <RichText content={reply.body} />
+            </div>
+          ))}
+          {
+            <button className="font-bold">
+              <Icon icon="reply" /> {t('translate:reply')}
+            </button>
+          }
+        </div>
       )}
-    </>
+    </div>
   );
 }
