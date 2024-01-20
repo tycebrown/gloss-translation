@@ -6,15 +6,13 @@ import TextInput from '../../shared/components/form/TextInput';
 import View from '../../shared/components/View';
 import ViewTitle from '../../shared/components/ViewTitle';
 import apiClient from '../../shared/apiClient';
-import Form, { SubmitHandler } from '../../shared/components/form/Form';
+import Form from '../../shared/components/form/Form';
 import InputError from '../../shared/components/form/InputError';
 import Button from '../../shared/components/actions/Button';
 import SubmittingIndicator from '../../shared/components/form/SubmittingIndicator';
 import { useFlash } from '../../shared/hooks/flash';
 import useAuth from '../../shared/hooks/useAuth';
 import { useEffect } from 'react';
-import RichTextInput from '../../shared/components/form/RichTextInput';
-import RichText from '../../shared/components/RichText';
 
 interface FormData {
   email: string;
@@ -42,11 +40,7 @@ export default function UpdateProfileView() {
     }
   }, [setValue, user]);
 
-  const onSubmit: SubmitHandler<FormData> = async ({
-    email,
-    name,
-    password,
-  }) => {
+  async function onSubmit({ email, name, password }: FormData) {
     try {
       if (user) {
         await apiClient.users.update({
@@ -66,38 +60,27 @@ export default function UpdateProfileView() {
     } catch (error) {
       flash.error(`${error}`);
     }
-  };
+  }
 
   if (!user) return null;
 
-  const test = formContext.watch('test');
-
   return (
-    <View fitToScreen className="flex justify-center items-start">
-      <Card className="mx-4 mt-4 w-96 flex-shrink p-6">
+    <View fitToScreen className="flex items-start justify-center">
+      <Card className="flex-shrink p-6 mx-4 mt-4 w-96">
         <ViewTitle>{t('users:update_profile')}</ViewTitle>
         <Form context={formContext} onSubmit={onSubmit}>
-          <div className="mb-2">
-            <FormLabel id="test">TEST</FormLabel>
-            <RichTextInput
-              aria-labelledby="test"
-              {...formContext.register('test', {
-                value: '<p>Hello Worldוָבֹ֔הוּanother</p>',
-              })}
-            />
-            <RichText content={test} />
-          </div>
           <div className="mb-2">
             <FormLabel htmlFor="email">
               {t('users:email').toUpperCase()}
             </FormLabel>
             <TextInput
+              {...formContext.register('email', {
+                required: true,
+              })}
               id="email"
-              name="email"
               type="email"
               className="w-full"
               autoComplete="email"
-              required
               aria-describedby="email-error"
             />
             <InputError
@@ -111,11 +94,12 @@ export default function UpdateProfileView() {
               {t('common:name').toUpperCase()}
             </FormLabel>
             <TextInput
+              {...formContext.register('name', {
+                required: true,
+              })}
               id="name"
-              name="name"
               className="w-full"
               autoComplete="name"
-              required
               aria-describedby="name-error"
             />
             <InputError
@@ -129,12 +113,13 @@ export default function UpdateProfileView() {
               {t('users:password').toUpperCase()}
             </FormLabel>
             <TextInput
+              {...formContext.register('password', {
+                minLength: 8,
+              })}
               type="password"
               id="password"
-              name="password"
               className="w-full"
               autoComplete="new-password"
-              minLength={8}
               aria-describedby="password-error"
             />
             <InputError
@@ -151,12 +136,16 @@ export default function UpdateProfileView() {
               {t('users:confirm_password').toUpperCase()}
             </FormLabel>
             <TextInput
+              {...formContext.register('confirmPassword', {
+                validate: {
+                  confirms: (value: unknown) =>
+                    value === formContext.getValues().password,
+                },
+              })}
               type="password"
               id="confirm-password"
-              name="confirmPassword"
               className="w-full"
               autoComplete="new-password"
-              confirms="password"
               aria-describedby="confirm-password-error"
             />
             <InputError

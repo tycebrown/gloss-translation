@@ -297,7 +297,7 @@ export default function TranslationView() {
 
   const commentsEnabled =
     isFlagEnabled('comments') &&
-    !!userCan('read', { type: 'Language', id: language });
+    (!!userCan('read', { type: 'Language', id: language }) || true);
 
   return (
     <View fitToScreen className="flex flex-col flex-grow gap-8">
