@@ -3,11 +3,13 @@ import StarterKit from '@tiptap/starter-kit';
 import { Icon } from '../Icon';
 import { ComponentProps, forwardRef, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import useMergedRef from '../../hooks/mergeRefs';
 
 export interface RichTextInputProps {
   name: string;
   value?: string;
   defaultValue?: string;
+  disabled?: boolean;
   onChange?(value: string): void;
   onBlur?(): void;
   'aria-labelledby'?: string;
@@ -29,9 +31,12 @@ export const extensions = [
 ];
 
 const RichTextInput = forwardRef<RichTextInputRef, RichTextInputProps>(
-  ({ name, onChange, onBlur, value, defaultValue, ...props }, ref) => {
+  (
+    { name, onChange, onBlur, value, defaultValue, disabled, ...props },
+    ref
+  ) => {
     const { t } = useTranslation(['common']);
-    const hiddenInput = useRef<HTMLInputElement>(null);
+    const hiddenInput = useRef<HTMLInputElement | null>(null);
 
     const editor = useEditor({
       extensions,
@@ -42,6 +47,7 @@ const RichTextInput = forwardRef<RichTextInputRef, RichTextInputProps>(
         },
       },
       content: value ?? defaultValue,
+      editable: !disabled,
       onCreate({ editor }) {
         const input = hiddenInput.current;
         if (input) {
@@ -68,9 +74,21 @@ const RichTextInput = forwardRef<RichTextInputRef, RichTextInputProps>(
       editor?.commands.setContent(value ?? '', false);
     }, [value, editor]);
 
+    useEffect(() => {
+      editor?.setOptions({ editable: !disabled });
+    }, [disabled, editor]);
+
     return (
       <div className="border rounded border-slate-400 focus-within:outline focus-within:outline-2 focus-within:outline-blue-600">
-        <input type="hidden" ref={hiddenInput} name={name} />
+        <input
+          type="hidden"
+          ref={(instance) => {
+            if (typeof ref === 'function') ref(instance);
+            else if (ref) ref.current = instance;
+            hiddenInput.current = instance;
+          }}
+          name={name}
+        />
         <div className="flex gap-3 p-1 border-b border-slate-400">
           <div className="flex gap-1">
             <RichTextInputButton

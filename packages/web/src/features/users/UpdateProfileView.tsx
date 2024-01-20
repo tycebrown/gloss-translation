@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useForm, SubmitHandler } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import Card from '../../shared/components/Card';
 import FormLabel from '../../shared/components/form/FormLabel';
 import TextInput from '../../shared/components/form/TextInput';
@@ -13,8 +13,6 @@ import SubmittingIndicator from '../../shared/components/form/SubmittingIndicato
 import { useFlash } from '../../shared/hooks/flash';
 import useAuth from '../../shared/hooks/useAuth';
 import { useEffect } from 'react';
-import RichTextInput from '../../shared/components/form/RichTextInput';
-import RichText from '../../shared/components/RichText';
 
 interface FormData {
   email: string;
@@ -66,23 +64,11 @@ export default function UpdateProfileView() {
 
   if (!user) return null;
 
-  const test = formContext.watch('test');
-
   return (
-    <View fitToScreen className="flex justify-center items-start">
-      <Card className="mx-4 mt-4 w-96 flex-shrink p-6">
+    <View fitToScreen className="flex items-start justify-center">
+      <Card className="flex-shrink p-6 mx-4 mt-4 w-96">
         <ViewTitle>{t('users:update_profile')}</ViewTitle>
         <Form context={formContext} onSubmit={onSubmit}>
-          <div className="mb-2">
-            <FormLabel id="test">TEST</FormLabel>
-            <RichTextInput
-              aria-labelledby="test"
-              {...formContext.register('test', {
-                value: '<p>Hello Worldוָבֹ֔הוּanother</p>',
-              })}
-            />
-            <RichText content={test} />
-          </div>
           <div className="mb-2">
             <FormLabel htmlFor="email">
               {t('users:email').toUpperCase()}

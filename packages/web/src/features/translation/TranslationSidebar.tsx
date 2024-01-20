@@ -123,6 +123,9 @@ interface CommentsViewProps {
   word: VerseWord;
 }
 function CommentsView({ language, word }: CommentsViewProps) {
+  const { user } = useAuth();
+  const { t } = useTranslation();
+
   const queryClient = useQueryClient();
   const commentsQuery = useQuery({
     queryKey: ['word-comments', language, word.id],
@@ -140,10 +143,58 @@ function CommentsView({ language, word }: CommentsViewProps) {
     onSuccess: () =>
       queryClient.invalidateQueries(['word-comments', language, word.id]),
   });
+  const [isCommentEditorOpen, setIsCommentEditorOpen] = useState(false);
+  const commentInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    commentInputRef.current?.focus();
+  }, [isCommentEditorOpen]);
+
   return (
     <>
       <div className="mt-1 mb-4">
-        <AddCommentView addComment={addCommentMutation.mutate} />
+        <Button
+          className={`text-sm`}
+          disabled={isCommentEditorOpen || addCommentMutation.isLoading}
+          onClick={() => setIsCommentEditorOpen(true)}
+        >
+          <Icon icon="plus" /> {t('common:comment')}
+        </Button>
+
+        <div
+          className={`mt-4 ${
+            isCommentEditorOpen || addCommentMutation.isLoading ? '' : 'hidden'
+          }`}
+        >
+          <RichTextInput
+            name="commentBody"
+            ref={commentInputRef}
+            disabled={addCommentMutation.isLoading}
+          />
+          <div className="h-2" />
+          <div className="flex flex-row justify-end gap-3">
+            <button
+              className="disabled:text-slate-500"
+              onClick={() => setIsCommentEditorOpen(false)}
+              disabled={addCommentMutation.isLoading}
+            >
+              {t('common:cancel')}
+            </button>
+            <Button
+              className="text-sm font-bold"
+              onClick={() => {
+                addCommentMutation.mutate({
+                  authorId: user?.id ?? '',
+                  body: commentInputRef.current?.value ?? '',
+                });
+                setIsCommentEditorOpen(false);
+              }}
+              disabled={addCommentMutation.isLoading}
+            >
+              <Icon icon="comment" /> {t('common:submit')}
+            </Button>
+          </div>
+        </div>
       </div>
       {commentsQuery.isLoading && (
         <div className="flex items-center justify-center w-full h-full">
@@ -160,92 +211,58 @@ function CommentsView({ language, word }: CommentsViewProps) {
   );
 }
 
-function AddCommentView({
-  addComment,
-}: {
-  addComment: (commentData: { body: string; authorId: string }) => void;
-}) {
-  const [isAddingComment, setIsAddingComment] = useState(false);
-  const inputRef = useRef<HTMLInputElement | null>(null);
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, [isAddingComment]);
-  const { user } = useAuth();
-  const { t } = useTranslation();
-
-  return (
-    <>
-      <Button
-        className={`${isAddingComment ? 'mb-4' : ''} text-sm`}
-        disabled={isAddingComment}
-        onClick={() => setIsAddingComment(true)}
-      >
-        <Icon icon="plus" /> {t('common:comment')}
-      </Button>
-
-      <div className={!isAddingComment ? 'hidden' : ''}>
-        <RichTextInput name="commentBody" />
-        <div className="h-2" />
-        <div className="flex flex-row justify-end gap-3">
-          <button onClick={() => setIsAddingComment(false)}>
-            {t('common:cancel')}
-          </button>
-          <Button
-            className="text-sm font-bold"
-            onClick={() => {
-              addComment({
-                authorId: user?.id ?? '',
-                body: inputRef.current?.value ?? '',
-              });
-              setIsAddingComment(false);
-            }}
-          >
-            <Icon icon="comment" /> {t('common:submit')}
-          </Button>
-        </div>
-      </div>
-    </>
-  );
-}
-
 function CommentThreadView({ comment }: { comment: CommentThread }) {
   const [isViewOpen, setIsViewOpen] = useState(false);
   const usersQuery = useQuery(['users'], () => apiClient.users.findAll());
   const { t } = useTranslation();
 
   return (
-    <div className="flex flex-col gap-1">
-      <div className="flex flex-col px-3 py-2 border border-slate-400 gap-1.5 rounded">
-        <div className="flex flex-row justify-between">
-          <div className="font-bold">
-            <button className="px-2" onClick={() => setIsViewOpen(!isViewOpen)}>
-              <Icon icon={isViewOpen ? 'caret-up' : 'caret-down'} />
-            </button>
-            {usersQuery.isSuccess &&
-              usersQuery?.data.data.find(({ id }) => id === comment.authorId)
-                ?.name}
-          </div>
-          <div className="text-sm">
-            {new Date(comment.timestamp).toLocaleDateString('en-US', {
-              hour12: true,
-              hour: 'numeric',
-              minute: 'numeric',
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric',
-            })}
+    <>
+      {usersQuery.isLoading && (
+        <div className="flex items-center justify-center w-full h-full">
+          <LoadingSpinner />
+        </div>
+      )}
+      {usersQuery.isSuccess && (
+        <div className="flex flex-col gap-1">
+          <div className="flex flex-col px-3 py-2 border border-slate-400 gap-1.5 rounded">
+            <div className="flex flex-row justify-between">
+              <div className="font-bold">
+                <button
+                  className="px-2"
+                  onClick={() => setIsViewOpen(!isViewOpen)}
+                >
+                  <Icon icon={isViewOpen ? 'caret-up' : 'caret-down'} />
+                </button>
+                {
+                  usersQuery?.data.data.find(
+                    ({ id }) => id === comment.authorId
+                  )?.name
+                }
+              </div>
+              <div className="text-sm">
+                {new Date(comment.timestamp).toLocaleDateString('en-US', {
+                  hour12: true,
+                  hour: 'numeric',
+                  minute: 'numeric',
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+                })}
+              </div>
+            </div>
+            <RichText content={comment.body} />
+            <div className="flex flex-row gap-2">
+              <button className="font-bold">
+                <Icon icon="check" /> {t('translate:resolve')}
+              </button>
+              <button className="font-bold">
+                <Icon icon="reply" /> {t('translate:reply')}
+              </button>
+            </div>
           </div>
         </div>
-        <RichText content={comment.body} />
-        <div className="flex flex-row gap-2">
-          <button className="font-bold">
-            <Icon icon="check" /> {t('translate:resolve')}
-          </button>
-          <button className="font-bold">
-            <Icon icon="reply" /> {t('translate:reply')}
-          </button>
-        </div>
-      </div>
-    </div>
+      )}
+    </>
   );
 }
