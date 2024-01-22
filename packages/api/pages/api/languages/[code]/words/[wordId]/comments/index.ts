@@ -1,13 +1,19 @@
 import * as z from 'zod';
-import createRoute from '../../../../../../shared/Route';
-import { client } from '../../../../../../shared/db';
+import createRoute from '../../../../../../../shared/Route';
+import { client } from '../../../../../../../shared/db';
 import {
   GetWordCommentsResponseBody,
   PostCommentRequestBody,
 } from '@translation/api-types';
+import { authorize } from '../../../../../../../shared/access-control/authorize';
 
 export default createRoute<{ code: string; wordId: string }>()
   .get<void, GetWordCommentsResponseBody>({
+    authorize: authorize((req) => ({
+      action: 'read',
+      subject: 'Language',
+      subjectId: req.query.code,
+    })),
     async handler(req, res) {
       const language = await client.language.findUnique({
         where: { code: req.query.code },
@@ -16,7 +22,6 @@ export default createRoute<{ code: string; wordId: string }>()
         res.notFound();
         return;
       }
-
       const responseBody: GetWordCommentsResponseBody = {
         data: await client.commentThread.findMany({
           select: {
@@ -42,6 +47,11 @@ export default createRoute<{ code: string; wordId: string }>()
       body: z.string(),
       authorId: z.string(),
     }),
+    authorize: authorize((req) => ({
+      action: 'translate',
+      subject: 'Language',
+      subjectId: req.query.code,
+    })),
     async handler(req, res) {
       const language = await client.language.findUnique({
         where: { code: req.query.code },
@@ -61,7 +71,7 @@ export default createRoute<{ code: string; wordId: string }>()
       });
 
       res.created(
-        `/api/languages/${language}/words/${req.query.wordId}/comments`
+        `/api/languages/${req.query.code}/words/${req.query.wordId}/comments`
       );
     },
   })

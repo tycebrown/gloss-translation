@@ -6,13 +6,14 @@ import apiClient from '../../shared/apiClient';
 import { Icon } from '../../shared/components/Icon';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
 import { parseVerseId } from './verse-utils';
-import { ReactNode, useEffect, useRef, useState } from 'react';
+import { ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import Button from '../../shared/components/actions/Button';
 import RichTextInput from '../../shared/components/form/RichTextInput';
 import RichText from '../../shared/components/RichText';
 import { useAccessControl } from '../../shared/accessControl';
 import useAuth from '../../shared/hooks/useAuth';
 import { Tab } from '@headlessui/react';
+import useMergedRef from '../../shared/hooks/mergeRefs';
 
 type TranslationSidebarProps = {
   language: string;
@@ -132,69 +133,70 @@ function CommentsView({ language, word }: CommentsViewProps) {
     queryFn: () => apiClient.words.findWordComments(word.id, language),
   });
   const comments = commentsQuery.isSuccess ? commentsQuery.data.data : [];
-  const addCommentMutation = useMutation({
-    mutationFn: ({ authorId, body }: { authorId: string; body: string }) =>
-      apiClient.words.addComment({
-        wordId: word.id,
-        language,
-        body: body,
-        authorId: authorId,
-      }),
+  const postCommentMutation = useMutation({
+    mutationFn: useCallback(
+      ({ body }: { body: string }) =>
+        apiClient.words.postComment({
+          wordId: word.id,
+          language,
+          body,
+          authorId: user?.id ?? '',
+        }),
+      [word, language, user]
+    ),
     onSuccess: () =>
       queryClient.invalidateQueries(['word-comments', language, word.id]),
   });
-  const [isCommentEditorOpen, setIsCommentEditorOpen] = useState(false);
-  const commentInputRef = useRef<HTMLInputElement | null>(null);
 
-  useEffect(() => {
-    commentInputRef.current?.focus();
-  }, [isCommentEditorOpen]);
+  const [isCommentEditorOpen, setIsCommentEditorOpen] = useState(false);
+  // ----- TODO: better names
+  const commentInputRef = useRef<HTMLInputElement>(null);
+  const mergedCommentInputRef = useMergedRef(commentInputRef, (current) =>
+    current?.focus()
+  );
 
   return (
     <>
       <div className="mt-1 mb-4">
         <Button
-          className={`text-sm`}
-          disabled={isCommentEditorOpen || addCommentMutation.isLoading}
+          className="text-sm"
+          disabled={isCommentEditorOpen || postCommentMutation.isLoading}
           onClick={() => setIsCommentEditorOpen(true)}
         >
           <Icon icon="plus" /> {t('common:comment')}
         </Button>
 
-        <div
-          className={`mt-4 ${
-            isCommentEditorOpen || addCommentMutation.isLoading ? '' : 'hidden'
-          }`}
-        >
-          <RichTextInput
-            name="commentBody"
-            ref={commentInputRef}
-            disabled={addCommentMutation.isLoading}
-          />
-          <div className="h-2" />
-          <div className="flex flex-row justify-end gap-3">
-            <button
-              className="disabled:text-slate-500"
-              onClick={() => setIsCommentEditorOpen(false)}
-              disabled={addCommentMutation.isLoading}
-            >
-              {t('common:cancel')}
-            </button>
-            <Button
-              className="text-sm font-bold"
-              onClick={() => {
-                addCommentMutation.mutate({
-                  authorId: user?.id ?? '',
-                  body: commentInputRef.current?.value ?? '',
-                });
-                setIsCommentEditorOpen(false);
-              }}
-              disabled={addCommentMutation.isLoading}
-            >
-              <Icon icon="comment" /> {t('common:submit')}
-            </Button>
+        {(isCommentEditorOpen || postCommentMutation.isLoading) && (
+          <div className="mt-4">
+            <RichTextInput
+              name="commentBody"
+              ref={mergedCommentInputRef}
+              disabled={postCommentMutation.isLoading}
+            />
+            <div className="h-2" />
+            <div className="flex flex-row justify-end gap-3">
+              <button
+                className="disabled:text-slate-500"
+                onClick={() => setIsCommentEditorOpen(false)}
+                disabled={postCommentMutation.isLoading}
+              >
+                {t('common:cancel')}
+              </button>
+              <Button
+                className="text-sm font-bold"
+                onClick={() => {
+                  postCommentMutation.mutate({
+                    body: commentInputRef.current?.value ?? '',
+                  });
+                  setIsCommentEditorOpen(false);
+                }}
+                disabled={postCommentMutation.isLoading}
+              >
+                <Icon icon="comment" /> {t('common:submit')}
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
       {commentsQuery.isLoading && (
         <div className="flex items-center justify-center w-full h-full">
@@ -204,16 +206,52 @@ function CommentsView({ language, word }: CommentsViewProps) {
       {commentsQuery.isSuccess &&
         comments.map((comment) => (
           <div key={comment.id} className="mb-2.5">
-            <CommentThreadView comment={comment} />
+            <CommentThreadView
+              word={word}
+              language={language}
+              comment={comment}
+            />
           </div>
         ))}
     </>
   );
 }
 
-function CommentThreadView({ comment }: { comment: CommentThread }) {
-  const [isRepliesViewOpen, setIsRepliesViewOpen] = useState(false);
+function CommentThreadView({
+  word,
+  language,
+  comment,
+}: {
+  word: VerseWord;
+  language: string;
+  comment: CommentThread;
+}) {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const usersQuery = useQuery(['users'], () => apiClient.users.findAll());
+  const postReplyMutation = useMutation({
+    mutationFn: useCallback(
+      ({ body }: { body: string }) =>
+        apiClient.words.postReply({
+          language,
+          wordId: word.id,
+          commentId: comment.id,
+          authorId: user?.id ?? '',
+          body,
+        }),
+      [word, language, comment, user]
+    ),
+    onSuccess: () =>
+      queryClient.invalidateQueries(['word-comments', language, word.id]),
+  });
+  // ----- TODO: better names
+  const replyInputRef = useRef<HTMLInputElement>(null);
+  const mergedReplyInputRef = useMergedRef(replyInputRef, (current) =>
+    current?.focus()
+  );
+
+  const [isRepliesViewOpen, setIsRepliesViewOpen] = useState(false);
+  const [isReplyEditorOpen, setIsReplyEditorOpen] = useState(false);
   const { t, i18n } = useTranslation();
 
   return (
@@ -248,46 +286,92 @@ function CommentThreadView({ comment }: { comment: CommentThread }) {
           <button className="font-bold">
             <Icon icon="check" /> {t('translate:resolve')}
           </button>
-          <button className="font-bold">
+          <button
+            className="font-bold"
+            onClick={() => {
+              setIsRepliesViewOpen(true);
+              setIsReplyEditorOpen(true);
+            }}
+          >
             <Icon icon="reply" /> {t('translate:reply')}
           </button>
         </div>
       </div>
-      {isRepliesViewOpen && comment.replies.length > 0 && (
+      {isRepliesViewOpen && (
         <div className="ms-6">
-          {comment.replies.map((reply) => (
-            <div
-              className="my-1 flex flex-col px-3 py-2 border border-slate-400 gap-1.5 rounded"
-              key={reply.id}
-            >
-              <div className="flex flex-row justify-between">
-                <div className="font-bold">
-                  {usersQuery.isLoading && (
-                    <LoadingSpinner className="inline" />
-                  )}
-                  {usersQuery.isSuccess &&
-                    usersQuery.data.data.find(({ id }) => id === reply.authorId)
-                      ?.name}
+          {comment.replies.length > 0 &&
+            comment.replies.map((reply) => (
+              <div
+                className="my-1 flex flex-col px-3 py-2 border border-slate-400 gap-1.5 rounded"
+                key={reply.id}
+              >
+                <div className="flex flex-row justify-between">
+                  <div className="font-bold">
+                    {usersQuery.isLoading && (
+                      <LoadingSpinner className="inline" />
+                    )}
+                    {usersQuery.isSuccess &&
+                      usersQuery.data.data.find(
+                        ({ id }) => id === reply.authorId
+                      )?.name}
+                  </div>
+                  <div className="text-sm">
+                    {new Date(reply.timestamp).toLocaleDateString(
+                      i18n.language,
+                      {
+                        hour12: true,
+                        hour: 'numeric',
+                        minute: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                      }
+                    )}
+                  </div>
                 </div>
-                <div className="text-sm">
-                  {new Date(reply.timestamp).toLocaleDateString(i18n.language, {
-                    hour12: true,
-                    hour: 'numeric',
-                    minute: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric',
-                  })}
-                </div>
+                <RichText content={reply.body} />
               </div>
-              <RichText content={reply.body} />
+            ))}
+
+          {(isReplyEditorOpen || postReplyMutation.isLoading) && (
+            <div className="mt-4">
+              <RichTextInput
+                name="replyBody"
+                ref={mergedReplyInputRef}
+                disabled={postReplyMutation.isLoading}
+              />
+              <div className="h-2" />
+              <div className="flex flex-row justify-end gap-3">
+                <button
+                  className="disabled:text-slate-500"
+                  onClick={() => setIsReplyEditorOpen(false)}
+                  disabled={postReplyMutation.isLoading}
+                >
+                  {t('common:cancel')}
+                </button>
+                <Button
+                  className="text-sm font-bold"
+                  onClick={() => {
+                    postReplyMutation.mutate({
+                      body: replyInputRef.current?.value ?? '',
+                    });
+                    setIsReplyEditorOpen(false);
+                  }}
+                  disabled={postReplyMutation.isLoading}
+                >
+                  <Icon icon="reply" /> {t('common:submit')}
+                </Button>
+              </div>
             </div>
-          ))}
-          {
-            <button className="font-bold">
+          )}
+          {comment.replies.length > 0 && (
+            <button
+              className="font-bold"
+              onClick={() => setIsReplyEditorOpen(true)}
+            >
               <Icon icon="reply" /> {t('translate:reply')}
             </button>
-          }
+          )}
         </div>
       )}
     </div>

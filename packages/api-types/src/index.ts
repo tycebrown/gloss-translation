@@ -230,6 +230,11 @@ export interface GetWordCommentsResponseBody {
 }
 
 export interface PostCommentRequestBody {
-  body: string;
   authorId: string;
+  body: string;
+}
+
+export interface PostCommentReplyRequestBody {
+  authorId: string;
+  body: string;
 }

@@ -1,6 +1,7 @@
 import type {
   GetWordCommentsResponseBody,
   PatchWordGlossRequestBody,
+  PostCommentReplyRequestBody,
   PostCommentRequestBody,
 } from '@translation/api-types';
 import ApiClient from './client';
@@ -33,7 +34,7 @@ export default class Verses {
     });
   }
 
-  async addComment({
+  async postComment({
     wordId,
     language,
     ...body
@@ -43,6 +44,22 @@ export default class Verses {
   }): Promise<void> {
     await this.client.post({
       path: `/api/languages/${language}/words/${wordId}/comments`,
+      body,
+    });
+  }
+
+  async postReply({
+    wordId,
+    language,
+    commentId,
+    ...body
+  }: PostCommentReplyRequestBody & {
+    wordId: string;
+    language: string;
+    commentId: string;
+  }): Promise<void> {
+    await this.client.post({
+      path: `/api/languages/${language}/words/${wordId}/comments/${commentId}/replies`,
       body,
     });
   }

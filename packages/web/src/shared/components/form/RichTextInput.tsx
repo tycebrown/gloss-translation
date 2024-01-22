@@ -1,7 +1,13 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { Icon } from '../Icon';
-import { ComponentProps, forwardRef, useEffect, useRef } from 'react';
+import {
+  ComponentProps,
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 
 export interface RichTextInputProps {
@@ -69,6 +75,18 @@ const RichTextInput = forwardRef<RichTextInputRef, RichTextInputProps>(
       },
     });
 
+    useImperativeHandle(ref, () => ({
+      get value() {
+        return hiddenInput.current?.value ?? '';
+      },
+      set value(newValue: string | undefined) {
+        if (hiddenInput.current) hiddenInput.current.value = newValue ?? '';
+      },
+      focus() {
+        editor?.commands.focus();
+      },
+    }));
+
     useEffect(() => {
       editor?.commands.setContent(value ?? '', false);
     }, [value, editor]);
@@ -79,15 +97,7 @@ const RichTextInput = forwardRef<RichTextInputRef, RichTextInputProps>(
 
     return (
       <div className="border rounded border-slate-400 focus-within:outline focus-within:outline-2 focus-within:outline-blue-600">
-        <input
-          type="hidden"
-          ref={(instance) => {
-            if (typeof ref === 'function') ref(instance);
-            else if (ref) ref.current = instance;
-            hiddenInput.current = instance;
-          }}
-          name={name}
-        />
+        <input type="hidden" ref={hiddenInput} name={name} />
         <div className="flex gap-3 p-1 border-b border-slate-400">
           <div className="flex gap-1">
             <RichTextInputButton
