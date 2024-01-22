@@ -5,12 +5,10 @@ import { useTranslation } from 'react-i18next';
 import apiClient from '../../shared/apiClient';
 import { Icon } from '../../shared/components/Icon';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
-import { parseVerseId } from './verse-utils';
-import { ReactNode, useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import Button from '../../shared/components/actions/Button';
 import RichTextInput from '../../shared/components/form/RichTextInput';
 import RichText from '../../shared/components/RichText';
-import { useAccessControl } from '../../shared/accessControl';
 import useAuth from '../../shared/hooks/useAuth';
 import { Tab } from '@headlessui/react';
 import useMergedRef from '../../shared/hooks/mergeRefs';
@@ -31,7 +29,6 @@ export const TranslationSidebar = ({
   onClose,
 }: TranslationSidebarProps) => {
   const word = verse.words[wordIndex];
-  const { bookId } = parseVerseId(verse.id);
   const lemmaResourcesQuery = useQuery(
     ['verse-lemma-resources', language, verse.id],
     () => apiClient.verses.findLemmaResources(verse.id)
@@ -53,10 +50,10 @@ export const TranslationSidebar = ({
     <div
       className="
         border-t h-[320px] flex flex-col gap-4 pt-3 flex-shrink-0
-        md:border-t-0 md:ltr:border-l md:rtl:border-r md:h-auto md:w-1/3 md:min-w-[320px] md:max-w-[480px] md:pt-0 md:ps-3
+        md:border-t-0 md:ltr:border-l md:rtl:border-r md:h-auto md:w-1/3 md:min-w-[320px] md:max-w-[480px] md:pt-0
       "
     >
-      <div className="flex flex-row items-center gap-4">
+      <div className="flex flex-row items-center gap-4 ps-3">
         <button onClick={onClose} type="button">
           <Icon icon="chevron-down" className="block sm:hidden" />
           <Icon
@@ -70,7 +67,7 @@ export const TranslationSidebar = ({
       </div>
       <div className="flex flex-col min-h-0 grow">
         <Tab.Group>
-          <Tab.List className="flex flex-row -mx-4 md:-ms-3">
+          <Tab.List className="flex flex-row">
             <div className="w-4 h-full border-b border-slate-400"></div>
             {tabTitles.map((title) => (
               <>
@@ -85,7 +82,7 @@ export const TranslationSidebar = ({
             ))}
             <div className="h-full border-b border-slate-400 grow"></div>
           </Tab.List>
-          <Tab.Panels className="p-3 -mx-4 overflow-y-auto grow md:-ms-3">
+          <Tab.Panels className="p-3 overflow-y-auto grow">
             <Tab.Panel>
               {lemmaResourcesQuery.isLoading && (
                 <div className="flex items-center justify-center w-full h-full">
@@ -149,9 +146,8 @@ function CommentsView({ language, word }: CommentsViewProps) {
   });
 
   const [isCommentEditorOpen, setIsCommentEditorOpen] = useState(false);
-  // ----- TODO: better names
   const commentInputRef = useRef<HTMLInputElement>(null);
-  const mergedCommentInputRef = useMergedRef(commentInputRef, (current) =>
+  const autoFocusCommentInputRef = useMergedRef(commentInputRef, (current) =>
     current?.focus()
   );
 
@@ -170,7 +166,7 @@ function CommentsView({ language, word }: CommentsViewProps) {
           <div className="mt-4">
             <RichTextInput
               name="commentBody"
-              ref={mergedCommentInputRef}
+              ref={autoFocusCommentInputRef}
               disabled={postCommentMutation.isLoading}
             />
             <div className="h-2" />
@@ -244,9 +240,8 @@ function CommentThreadView({
     onSuccess: () =>
       queryClient.invalidateQueries(['word-comments', language, word.id]),
   });
-  // ----- TODO: better names
   const replyInputRef = useRef<HTMLInputElement>(null);
-  const mergedReplyInputRef = useMergedRef(replyInputRef, (current) =>
+  const autoFocusReplyInputRef = useMergedRef(replyInputRef, (current) =>
     current?.focus()
   );
 
@@ -337,7 +332,7 @@ function CommentThreadView({
             <div className="mt-4">
               <RichTextInput
                 name="replyBody"
-                ref={mergedReplyInputRef}
+                ref={autoFocusReplyInputRef}
                 disabled={postReplyMutation.isLoading}
               />
               <div className="h-2" />
