@@ -5,6 +5,7 @@ import {
   GetWordCommentsResponseBody,
   PostCommentRequestBody,
 } from '@translation/api-types';
+import { authorize } from '../../../../../../shared/access-control/authorize';
 
 export default createRoute<{ code: string; wordId: string }>()
   .get<void, GetWordCommentsResponseBody>({
@@ -42,6 +43,11 @@ export default createRoute<{ code: string; wordId: string }>()
       body: z.string(),
       authorId: z.string(),
     }),
+    authorize: authorize((req) => ({
+      action: 'translate',
+      subject: 'Language',
+      subjectId: req.query.code,
+    })),
     async handler(req, res) {
       const language = await client.language.findUnique({
         where: { code: req.query.code },
