@@ -1,71 +1,25 @@
 post:
   tags:
     - Languages
-  summary: Get the translator comments for a word
+  summary: Add a reply to a comment
   parameters:
     - $ref: '../../schemas/parameters.yml#languageCode'
     - $ref: '../../schemas/parameters.yml#wordId'
+    - $ref: '../../schemas/parameters.yml#commentId'
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            authorId:
+              type: string
+              description: The unique ID of the user who created this comment.
+            body:
+              type: string
+              format: html
+              description: The body of the comment in rich text (html)
   responses:
-    '200':
-      description: Ok
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              data:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    id:
-                      type: string
-                      description: The unique ID of the comment.
-                    authorId:
-                      type: string
-                      description: The unique ID of the user who created this comment.
-                    body:
-                      type: string
-                      format: html
-                      description: The body of the comment in rich text (html)
-                    timestamp:
-                      type: string
-                      format: date
-                      description: The timestamp of when this comment was made.
-                    resolved:
-                      type: boolean
-                      description: Whether this comment thread is resolved or not
-                    replies:
-                      type: array
-                      items:
-                        type: object
-                        properties:
-                          id:
-                            type: string
-                            description: The unique ID of the reply.
-                          authorId:
-                            type: string
-                            description: The unique ID of the user who made this reply.
-                          body:
-                            type: string
-                            format: html
-                            description: The body of the reply in rich text (html)
-                          timestamp:
-                            type: string
-                            format: date
-                            description: The timestamp of when this reply was made.
-                  example:
-                    - id: 018D059D-6B39-53A5-382E-4DBB3A756527
-                      authorId: 018D059D-DA66-F6D9-A9B2-05CD3B1AF965
-                      body: <strong>Example body</strong>
-                      timestamp: 1984-03-14T01:35:16.633Z
-                      resolved: false
-                      replies:
-                        - id: 018D05A1-6EA7-BCD8-5410-B3A26D10BAF1
-                          authorId: 01885a1d-3e97-3e1d-3435-6e1dcbba84a3
-                          body: <p>Lorem ipsum dolor sit amet</p>
-                          timestamp: 1212-07-13T01:35:16.633Z
-                        - id: 018D04D3-73FE-9F0F-EE9E-2A305F3115AE
-                          authorId: 01885a1d-3e97-3e1d-3435-6e1dcbba84a3
-                          body: <p>Lorem ipsum dolor sit amet</p>
-                          timestamp: 1212-08-02T01:35:16.633Z
+    201:
+      description: Created

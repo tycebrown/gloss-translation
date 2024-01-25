@@ -218,7 +218,9 @@ function CommentThreadView({
   language: string;
   comment: CommentThread;
 }) {
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
+
   const queryClient = useQueryClient();
   const usersQuery = useQuery(['users'], () => apiClient.users.findAll());
   const postReplyMutation = useMutation({
@@ -240,7 +242,6 @@ function CommentThreadView({
 
   const [isRepliesViewOpen, setIsRepliesViewOpen] = useState(false);
   const [isReplyEditorOpen, setIsReplyEditorOpen] = useState(false);
-  const { t, i18n } = useTranslation();
 
   return (
     <>

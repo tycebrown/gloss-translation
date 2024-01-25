@@ -103,7 +103,7 @@ const RichTextInput = forwardRef<RichTextInputRef, RichTextInputProps>(
     }, [value, editor]);
 
     useEffect(() => {
-      editor?.setOptions({ editable: editable });
+      editor?.setOptions({ editable });
     }, [editable, editor]);
 
     return (
@@ -202,7 +202,7 @@ function RichTextInputButton({
       title={label}
     >
       <Icon icon={icon} />
-      {/** We add the class "top-[-99999px] left-[-9999px]" to the screen reader text so it does not interfere with scrolling*/}
+      {/** We add the class "top-[-99999px] left-[-9999px]" to the screen reader span so it does not interfere with scrolling*/}
       <span className="sr-only top-[-9999px] left-[-9999px]">{label}</span>
     </button>
   );
