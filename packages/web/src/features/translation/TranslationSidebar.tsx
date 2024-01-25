@@ -167,13 +167,13 @@ function CommentsView({ language, word }: CommentsViewProps) {
               autoFocus
             />
             <div className="flex flex-row justify-end gap-3 mt-2">
-              <button
-                className="disabled:text-slate-500"
+              <Button
+                variant="secondary"
                 onClick={() => setIsCommentEditorOpen(false)}
                 disabled={postCommentMutation.isLoading}
               >
                 {t('common:cancel')}
-              </button>
+              </Button>
               <Button
                 className="text-sm font-bold"
                 onClick={() => {
@@ -275,18 +275,18 @@ function CommentThreadView({
         </div>
         <RichText content={comment.body} />
         <div className="flex flex-row gap-2">
-          <button className="font-bold">
+          <Button variant="tertiary">
             <Icon icon="check" /> {t('translate:resolve')}
-          </button>
-          <button
-            className="font-bold"
+          </Button>
+          <Button
+            variant="tertiary"
             onClick={() => {
               setIsRepliesViewOpen(true);
               setIsReplyEditorOpen(true);
             }}
           >
             <Icon icon="reply" /> {t('translate:reply')}
-          </button>
+          </Button>
         </div>
       </div>
       {isRepliesViewOpen && (
@@ -334,13 +334,14 @@ function CommentThreadView({
               />
               <div className="h-2" />
               <div className="flex flex-row justify-end gap-3 mt-2">
-                <button
+                <Button
+                  variant="secondary"
                   className="disabled:text-slate-500"
                   onClick={() => setIsReplyEditorOpen(false)}
                   disabled={postReplyMutation.isLoading}
                 >
                   {t('common:cancel')}
-                </button>
+                </Button>
                 <Button
                   className="text-sm font-bold"
                   onClick={() => {
@@ -357,12 +358,12 @@ function CommentThreadView({
             </div>
           )}
           {comment.replies.length > 0 && (
-            <button
-              className="font-bold"
+            <Button
+              variant="tertiary"
               onClick={() => setIsReplyEditorOpen(true)}
             >
               <Icon icon="reply" /> {t('translate:reply')}
-            </button>
+            </Button>
           )}
         </div>
       )}
