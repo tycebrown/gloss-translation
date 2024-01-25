@@ -3,7 +3,6 @@ import StarterKit from '@tiptap/starter-kit';
 import { Icon } from '../Icon';
 import { ComponentProps, forwardRef, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import useMergedRef from '../../hooks/mergeRefs';
 
 export interface RichTextInputProps {
   name: string;
