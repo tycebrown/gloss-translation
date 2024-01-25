@@ -164,6 +164,7 @@ function CommentsView({ language, word }: CommentsViewProps) {
               name="commentBody"
               ref={commentInputRef}
               editable={!postCommentMutation.isLoading}
+              autoFocus
             />
             <div className="flex flex-row justify-end gap-3 mt-2">
               <button
@@ -248,7 +249,10 @@ function CommentThreadView({
           <div className="font-bold">
             <button
               className="px-2"
-              onClick={() => setIsRepliesViewOpen(!isRepliesViewOpen)}
+              onClick={() => {
+                if (isRepliesViewOpen) setIsReplyEditorOpen(false);
+                setIsRepliesViewOpen(!isRepliesViewOpen);
+              }}
             >
               <Icon icon={isRepliesViewOpen ? 'caret-up' : 'caret-down'} />
             </button>
@@ -325,6 +329,7 @@ function CommentThreadView({
                 name="replyBody"
                 ref={replyInputRef}
                 editable={!postReplyMutation.isLoading}
+                autoFocus
               />
               <div className="h-2" />
               <div className="flex flex-row justify-end gap-3 mt-2">

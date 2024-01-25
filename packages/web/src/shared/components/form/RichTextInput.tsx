@@ -45,7 +45,7 @@ const RichTextInput = forwardRef<RichTextInputRef, RichTextInputProps>(
       value,
       defaultValue,
       editable,
-      autoFocus,
+      autoFocus = false,
       ...props
     },
     ref
@@ -202,8 +202,8 @@ function RichTextInputButton({
       title={label}
     >
       <Icon icon={icon} />
-      {/** We add the class "top-[-99999px]" to the screen reader text so it does not interfere with scrolling*/}
-      <span className="sr-only top-[-99999px]">{label}</span>
+      {/** We add the class "top-[-99999px] left-[-9999px]" to the screen reader text so it does not interfere with scrolling*/}
+      <span className="sr-only top-[-9999px] left-[-9999px]">{label}</span>
     </button>
   );
 }
