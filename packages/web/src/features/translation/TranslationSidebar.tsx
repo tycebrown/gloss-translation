@@ -170,13 +170,13 @@ function CommentsView({ language, word }: CommentsViewProps) {
           />
           <div className="h-2" />
           <div className="flex flex-row justify-end gap-3">
-            <button
-              className="disabled:text-slate-500"
+            <Button
+              variant="secondary"
               onClick={() => setIsCommentEditorOpen(false)}
               disabled={addCommentMutation.isLoading}
             >
               {t('common:cancel')}
-            </button>
+            </Button>
             <Button
               className="text-sm font-bold"
               onClick={() => {
