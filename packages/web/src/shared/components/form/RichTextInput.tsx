@@ -14,7 +14,8 @@ export interface RichTextInputProps {
   name: string;
   value?: string;
   defaultValue?: string;
-  disabled?: boolean;
+  editable?: boolean;
+  autoFocus?: boolean;
   onChange?(value: string): void;
   onBlur?(): void;
   'aria-labelledby'?: string;
@@ -37,11 +38,20 @@ export const extensions = [
 
 const RichTextInput = forwardRef<RichTextInputRef, RichTextInputProps>(
   (
-    { name, onChange, onBlur, value, defaultValue, disabled, ...props },
+    {
+      name,
+      onChange,
+      onBlur,
+      value,
+      defaultValue,
+      editable,
+      autoFocus,
+      ...props
+    },
     ref
   ) => {
     const { t } = useTranslation(['common']);
-    const hiddenInput = useRef<HTMLInputElement | null>(null);
+    const hiddenInput = useRef<HTMLInputElement>(null);
 
     const editor = useEditor({
       extensions,
@@ -52,7 +62,8 @@ const RichTextInput = forwardRef<RichTextInputRef, RichTextInputProps>(
         },
       },
       content: value ?? defaultValue,
-      editable: !disabled,
+      editable: editable,
+      autofocus: autoFocus,
       onCreate({ editor }) {
         const input = hiddenInput.current;
         if (input) {
@@ -92,8 +103,8 @@ const RichTextInput = forwardRef<RichTextInputRef, RichTextInputProps>(
     }, [value, editor]);
 
     useEffect(() => {
-      editor?.setOptions({ editable: !disabled });
-    }, [disabled, editor]);
+      editor?.setOptions({ editable: editable });
+    }, [editable, editor]);
 
     return (
       <div className="border rounded border-slate-400 focus-within:outline focus-within:outline-2 focus-within:outline-blue-600">
@@ -102,21 +113,21 @@ const RichTextInput = forwardRef<RichTextInputRef, RichTextInputProps>(
           <div className="flex gap-1">
             <RichTextInputButton
               active={editor?.isActive('bold')}
-              disabled={!editor?.can().toggleBold()}
+              disabled={!editable || !editor?.can().toggleBold()}
               icon="bold"
               label={t('common:rich_text.bold_tooltip')}
               onClick={() => editor?.chain().focus().toggleBold().run()}
             />
             <RichTextInputButton
               active={editor?.isActive('italic')}
-              disabled={!editor?.can().toggleItalic()}
+              disabled={!editable || !editor?.can().toggleItalic()}
               icon="italic"
               label={t('common:rich_text.italic_tooltip')}
               onClick={() => editor?.chain().focus().toggleItalic().run()}
             />
             <RichTextInputButton
               active={editor?.isActive('strike')}
-              disabled={!editor?.can().toggleStrike()}
+              disabled={!editable || !editor?.can().toggleStrike()}
               icon="strikethrough"
               label={t('common:rich_text.strike_tooltip')}
               onClick={() => editor?.chain().focus().toggleStrike().run()}
@@ -125,20 +136,20 @@ const RichTextInput = forwardRef<RichTextInputRef, RichTextInputProps>(
           <div className="flex gap-1">
             <RichTextInputButton
               active={editor?.isActive('bulletList')}
-              disabled={!editor?.can().toggleBulletList()}
+              disabled={!editable || !editor?.can().toggleBulletList()}
               icon="list-ul"
               label={t('common:rich_text.bullet_list_tooltip')}
               onClick={() => editor?.chain().focus().toggleBulletList().run()}
             />
             <RichTextInputButton
               active={editor?.isActive('orderedList')}
-              disabled={!editor?.can().toggleOrderedList()}
+              disabled={!editable || !editor?.can().toggleOrderedList()}
               icon="list-ol"
               label={t('common:rich_text.ordered_list_tooltip')}
               onClick={() => editor?.chain().focus().toggleOrderedList().run()}
             />
             <RichTextInputButton
-              disabled={!editor?.can().sinkListItem('listItem')}
+              disabled={!editable || !editor?.can().sinkListItem('listItem')}
               icon="indent"
               label={t('common:rich_text.indent_tooltip')}
               onClick={() =>
@@ -146,7 +157,7 @@ const RichTextInput = forwardRef<RichTextInputRef, RichTextInputProps>(
               }
             />
             <RichTextInputButton
-              disabled={!editor?.can().liftListItem('listItem')}
+              disabled={!editable || !editor?.can().liftListItem('listItem')}
               icon="outdent"
               label={t('common:rich_text.outdent_tooltip')}
               onClick={() =>
@@ -191,7 +202,8 @@ function RichTextInputButton({
       title={label}
     >
       <Icon icon={icon} />
-      <span className="sr-only">{label}</span>
+      {/** We add the class "top-[-99999px]" to the screen reader text so it does not interfere with scrolling*/}
+      <span className="sr-only top-[-99999px]">{label}</span>
     </button>
   );
 }

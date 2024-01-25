@@ -42,6 +42,8 @@ paths:
     $ref: ./paths/languages/language-words.yml
   /languages/{code}/words/{wordId}/comments:
     $ref: ./paths/languages/language-word-comments.yml
+  /languages/{code}/words/{wordId}/comments/{commentId}/replies:
+    $ref: ./paths/languages/language-word-comment-replies.yml
   /languages/{code}/members:
     $ref: ./paths/languages/language-members.yml
   /languages/{code}/members/{userId}:

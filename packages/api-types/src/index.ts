@@ -233,8 +233,3 @@ export interface PostCommentRequestBody {
   authorId: string;
   body: string;
 }
-
-export interface PostCommentReplyRequestBody {
-  authorId: string;
-  body: string;
-}

@@ -1,4 +1,4 @@
-get:
+post:
   tags:
     - Languages
   summary: Get the translator comments for a word
@@ -69,27 +69,3 @@ get:
                           authorId: 01885a1d-3e97-3e1d-3435-6e1dcbba84a3
                           body: <p>Lorem ipsum dolor sit amet</p>
                           timestamp: 1212-08-02T01:35:16.633Z
-post:
-  tags:
-    - Languages
-  summary: Add a translator comment to a word
-  parameters:
-    - $ref: '../../schemas/parameters.yml#languageCode'
-    - $ref: '../../schemas/parameters.yml#wordId'
-  requestBody:
-    required: true
-    content:
-      application/json:
-        schema:
-          type: object
-          properties:
-            authorId:
-              type: string
-              description: The unique ID of the user who created this comment.
-            body:
-              type: string
-              format: html
-              description: The body of the comment in rich text (html)
-  responses:
-    201:
-      description: Created

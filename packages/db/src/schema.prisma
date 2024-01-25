@@ -160,7 +160,7 @@ model Word {
   glosses        Gloss[]
   /// The list of machine glosses in different langugages for this word.
   machineGlosses MachineGloss[]
-  /// The comment threads attached to the word.
+  /// The comment threads attached to this word.
   comments       CommentThread[]
 }
 
@@ -310,9 +310,9 @@ model LemmaResource {
 
 /// A comment thread on a particular word, for a particular language.
 model CommentThread {
-  /// The ID of the comment thread. 
+  /// The ID of this comment thread. 
   id         String         @id @default(dbgenerated("generate_ulid()")) @db.Uuid
-  /// The user who created this comment.
+  /// The user who created this comment thread.
   author     AuthUser       @relation(fields: [authorId], references: [id])
   /// The id of the author.
   authorId   String         @db.Uuid
@@ -326,7 +326,7 @@ model CommentThread {
   languageId String         @db.Uuid
   /// The body of the initial comment created by the author. Stored as HTML (rich text).
   body       String
-  /// The timestamp when the comment thread was created.
+  /// The timestamp when this comment thread was created.
   timestamp  DateTime       @default(now())
   /// Whether the comment thread is resolved or not.
   resolved   Boolean        @default(false)
@@ -336,7 +336,7 @@ model CommentThread {
 
 /// A reply on a parent comment thread.
 model CommentReply {
-  /// The ID of the comment reply. 
+  /// The ID of this comment reply. 
   id        String        @id @default(dbgenerated("generate_ulid()")) @db.Uuid
   /// The parent comment thread that this reply is linked to.
   parent    CommentThread @relation(fields: [parentId], references: [id])
@@ -346,9 +346,9 @@ model CommentReply {
   author    AuthUser      @relation(fields: [authorId], references: [id])
   /// The ID of the author
   authorId  String        @db.Uuid
-  /// The body of the comment reply. Stored as HTML (rich text).
+  /// The body of this comment reply. Stored as HTML (rich text).
   body      String
-  /// The timestamp when the comment reply was created.
+  /// The timestamp when this comment reply was created.
   timestamp DateTime      @default(now())
 }
 

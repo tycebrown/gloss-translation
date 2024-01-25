@@ -1,7 +1,6 @@
 import type {
   GetWordCommentsResponseBody,
   PatchWordGlossRequestBody,
-  PostCommentReplyRequestBody,
   PostCommentRequestBody,
 } from '@translation/api-types';
 import ApiClient from './client';
@@ -53,7 +52,7 @@ export default class Verses {
     language,
     commentId,
     ...body
-  }: PostCommentReplyRequestBody & {
+  }: PostCommentRequestBody & {
     wordId: string;
     language: string;
     commentId: string;

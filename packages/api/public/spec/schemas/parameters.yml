@@ -38,3 +38,11 @@ lemmaId:
   schema:
     type: string
   example: G314
+commentId:
+  name: commentId
+  in: path
+  description: The UUID of a comment
+  required: true
+  schema:
+    type: string
+  example: '453b6567-a29b-12d3-a456-329639174342'

@@ -11,7 +11,6 @@ import RichTextInput from '../../shared/components/form/RichTextInput';
 import RichText from '../../shared/components/RichText';
 import useAuth from '../../shared/hooks/useAuth';
 import { Tab } from '@headlessui/react';
-import useMergedRef from '../../shared/hooks/mergeRefs';
 
 type TranslationSidebarProps = {
   language: string;
@@ -82,7 +81,7 @@ export const TranslationSidebar = ({
             ))}
             <div className="h-full border-b border-slate-400 grow"></div>
           </Tab.List>
-          <Tab.Panels className="p-3 overflow-y-auto grow">
+          <Tab.Panels className="p-3 overflow-y-auto">
             <Tab.Panel>
               {lemmaResourcesQuery.isLoading && (
                 <div className="flex items-center justify-center w-full h-full">
@@ -120,6 +119,7 @@ interface CommentsViewProps {
   language: string;
   word: VerseWord;
 }
+
 function CommentsView({ language, word }: CommentsViewProps) {
   const { user } = useAuth();
   const { t } = useTranslation();
@@ -147,9 +147,6 @@ function CommentsView({ language, word }: CommentsViewProps) {
 
   const [isCommentEditorOpen, setIsCommentEditorOpen] = useState(false);
   const commentInputRef = useRef<HTMLInputElement>(null);
-  const autoFocusCommentInputRef = useMergedRef(commentInputRef, (current) =>
-    current?.focus()
-  );
 
   return (
     <>
@@ -161,16 +158,14 @@ function CommentsView({ language, word }: CommentsViewProps) {
         >
           <Icon icon="plus" /> {t('common:comment')}
         </Button>
-
         {(isCommentEditorOpen || postCommentMutation.isLoading) && (
           <div className="mt-4">
             <RichTextInput
               name="commentBody"
-              ref={autoFocusCommentInputRef}
-              disabled={postCommentMutation.isLoading}
+              ref={commentInputRef}
+              editable={!postCommentMutation.isLoading}
             />
-            <div className="h-2" />
-            <div className="flex flex-row justify-end gap-3">
+            <div className="flex flex-row justify-end gap-3 mt-2">
               <button
                 className="disabled:text-slate-500"
                 onClick={() => setIsCommentEditorOpen(false)}
@@ -241,16 +236,13 @@ function CommentThreadView({
       queryClient.invalidateQueries(['word-comments', language, word.id]),
   });
   const replyInputRef = useRef<HTMLInputElement>(null);
-  const autoFocusReplyInputRef = useMergedRef(replyInputRef, (current) =>
-    current?.focus()
-  );
 
   const [isRepliesViewOpen, setIsRepliesViewOpen] = useState(false);
   const [isReplyEditorOpen, setIsReplyEditorOpen] = useState(false);
   const { t, i18n } = useTranslation();
 
   return (
-    <div className="flex flex-col">
+    <>
       <div className="flex flex-col px-3 py-2 border border-slate-400 gap-1.5 rounded">
         <div className="flex flex-row justify-between">
           <div className="font-bold">
@@ -327,16 +319,15 @@ function CommentThreadView({
                 <RichText content={reply.body} />
               </div>
             ))}
-
           {(isReplyEditorOpen || postReplyMutation.isLoading) && (
             <div className="mt-4">
               <RichTextInput
                 name="replyBody"
-                ref={autoFocusReplyInputRef}
-                disabled={postReplyMutation.isLoading}
+                ref={replyInputRef}
+                editable={!postReplyMutation.isLoading}
               />
               <div className="h-2" />
-              <div className="flex flex-row justify-end gap-3">
+              <div className="flex flex-row justify-end gap-3 mt-2">
                 <button
                   className="disabled:text-slate-500"
                   onClick={() => setIsReplyEditorOpen(false)}
@@ -369,6 +360,6 @@ function CommentThreadView({
           )}
         </div>
       )}
-    </div>
+    </>
   );
 }
