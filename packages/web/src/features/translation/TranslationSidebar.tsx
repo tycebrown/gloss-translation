@@ -169,9 +169,9 @@ function CommentsView({ language, word }: CommentsViewProps) {
             disabled={addCommentMutation.isLoading}
           />
           <div className="h-2" />
-          <div className="flex flex-row justify-end gap-3">
+          <div className="flex flex-row justify-end gap-4">
             <Button
-              variant="secondary"
+              variant="tertiary"
               onClick={() => setIsCommentEditorOpen(false)}
               disabled={addCommentMutation.isLoading}
             >
