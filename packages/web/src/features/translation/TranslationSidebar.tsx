@@ -166,9 +166,9 @@ function CommentsView({ language, word }: CommentsViewProps) {
               editable={!postCommentMutation.isLoading}
               autoFocus
             />
-            <div className="flex flex-row justify-end gap-3 mt-2">
+            <div className="flex flex-row justify-end gap-4 mt-2">
               <Button
-                variant="secondary"
+                variant="tertiary"
                 onClick={() => setIsCommentEditorOpen(false)}
                 disabled={postCommentMutation.isLoading}
               >
@@ -333,9 +333,9 @@ function CommentThreadView({
                 autoFocus
               />
               <div className="h-2" />
-              <div className="flex flex-row justify-end gap-3 mt-2">
+              <div className="flex flex-row justify-end gap-4 mt-2">
                 <Button
-                  variant="secondary"
+                  variant="tertiary"
                   className="disabled:text-slate-500"
                   onClick={() => setIsReplyEditorOpen(false)}
                   disabled={postReplyMutation.isLoading}
