@@ -1,8 +1,8 @@
 import * as z from 'zod';
 import { GlossState, PatchWordGlossRequestBody } from '@translation/api-types';
-import createRoute from '../../../../../shared/Route';
-import { PrismaTypes, client } from '../../../../../shared/db';
-import { authorize } from '../../../../../shared/access-control/authorize';
+import createRoute from '../../../../../../shared/Route';
+import { PrismaTypes, client } from '../../../../../../shared/db';
+import { authorize } from '../../../../../../shared/access-control/authorize';
 
 export default createRoute<{ code: string; wordId: string }>()
   .patch<PatchWordGlossRequestBody, void>({

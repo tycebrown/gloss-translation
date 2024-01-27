@@ -208,3 +208,7 @@ export interface Resource {
 export interface GetLemmaResourcesResponseBody {
   data: Record<string, Resource[]>;
 }
+
+export interface GetNotesResponseBody {
+  content?: string;
+}

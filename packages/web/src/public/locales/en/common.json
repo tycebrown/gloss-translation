@@ -32,5 +32,7 @@
   "try_again": "Try Again",
   "unknown_error": "Unknown Error",
   "unknown_error_message": "An unknown error has occurred.",
-  "update": "Update"
+  "update": "Update",
+  "edit": "Edit",
+  "save": "Save"
 }
