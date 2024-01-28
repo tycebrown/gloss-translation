@@ -133,7 +133,7 @@ function NotesView({ language, word }: { language: string; word: VerseWord }) {
         language,
       }),
   });
-  const patchNotesMutation = useMutation({
+  const updateNotesMutation = useMutation({
     mutationFn: async (variables: {
       wordId: string;
       content: string;
@@ -192,20 +192,31 @@ function NotesView({ language, word }: { language: string; word: VerseWord }) {
                 name="translatorNotes"
               />
               <div className="flex flex-row justify-end gap-4 mt-2">
-                <Button variant="tertiary" onClick={() => setIsEditing(false)}>
+                <Button
+                  variant="tertiary"
+                  onClick={() => setIsEditing(false)}
+                  disabled={updateNotesMutation.isLoading}
+                >
                   {t('common:cancel')}
                 </Button>
                 <Button
                   onClick={() => {
                     console.log(notesInputRef.current?.value);
-                    patchNotesMutation.mutate({
+                    updateNotesMutation.mutate({
                       wordId: word.id,
                       content: notesInputRef.current?.value ?? '',
                       lastAuthorId: user!.id,
                     });
                   }}
+                  disabled={updateNotesMutation.isLoading}
                 >
-                  <Icon icon="save" /> {t('common:save')}
+                  {updateNotesMutation.isLoading ? (
+                    <LoadingSpinner />
+                  ) : (
+                    <>
+                      <Icon icon="save" /> {t('common:save')}
+                    </>
+                  )}
                 </Button>
               </div>
             </>
