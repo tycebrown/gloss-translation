@@ -31,7 +31,7 @@ export const extensions = [
 const RichTextInput = forwardRef<RichTextInputRef, RichTextInputProps>(
   ({ name, onChange, onBlur, value, defaultValue, ...props }, ref) => {
     const { t } = useTranslation(['common']);
-    const hiddenInput = useRef<HTMLInputElement>(null);
+    const hiddenInput = useRef<HTMLInputElement | null>(null);
 
     const editor = useEditor({
       extensions,
@@ -70,8 +70,16 @@ const RichTextInput = forwardRef<RichTextInputRef, RichTextInputProps>(
 
     return (
       <div className="border rounded border-slate-400 focus-within:outline focus-within:outline-2 focus-within:outline-blue-600">
-        <input type="hidden" ref={hiddenInput} name={name} />
-        <div className="border-slate-400 border-b p-1 flex gap-3">
+        <input
+          type="hidden"
+          ref={(instance) => {
+            if (typeof ref === 'function') ref(instance);
+            else if (ref) ref.current = instance;
+            hiddenInput.current = instance;
+          }}
+          name={name}
+        />
+        <div className="flex gap-3 p-1 border-b border-slate-400">
           <div className="flex gap-1">
             <RichTextInputButton
               active={editor?.isActive('bold')}
@@ -128,7 +136,7 @@ const RichTextInput = forwardRef<RichTextInputRef, RichTextInputProps>(
             />
           </div>
         </div>
-        <EditorContent editor={editor} className="py-2 px-3" />
+        <EditorContent editor={editor} className="px-3 py-2" />
       </div>
     );
   }

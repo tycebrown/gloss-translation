@@ -210,5 +210,11 @@ export interface GetLemmaResourcesResponseBody {
 }
 
 export interface GetNotesResponseBody {
-  content?: string;
+  data: { content: string; lastEditedAt: Date; lastAuthorId: string } | null;
+}
+
+export interface PatchNotesRequestBody {
+  content: string;
+  lastAuthorId: string;
+  lastEditedAt: string;
 }

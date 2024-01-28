@@ -1,6 +1,6 @@
 import { Tab } from '@headlessui/react';
-import { useQuery } from '@tanstack/react-query';
-import { Verse } from '@translation/api-types';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Verse, VerseWord } from '@translation/api-types';
 import DOMPurify from 'dompurify';
 import { useTranslation } from 'react-i18next';
 import apiClient from '../../shared/apiClient';
@@ -8,9 +8,10 @@ import { Icon } from '../../shared/components/Icon';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
 import RichTextInput from '../../shared/components/form/RichTextInput';
 import RichText from '../../shared/components/RichText';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useAccessControl } from '../../shared/accessControl';
 import Button from '../../shared/components/actions/Button';
+import useAuth from '../../shared/hooks/useAuth';
 
 type TranslationSidebarProps = {
   language: string;
@@ -109,7 +110,7 @@ export const TranslationSidebar = ({
               )}
             </Tab.Panel>
             <Tab.Panel>
-              <NotesView language={language} />
+              <NotesView language={language} word={word} />
             </Tab.Panel>
             {showComments && <Tab.Panel>{t('common:coming_soon')}</Tab.Panel>}
           </Tab.Panels>
@@ -119,49 +120,96 @@ export const TranslationSidebar = ({
   );
 };
 
-function NotesView({ language }: { language: string }) {
-  const loremIpsum = `<p>
-      Lorem ipsum dolor sit amet consectetur adipisicing elit. Odit in molestiae
-      minus? Libero, exercitationem laboriosam porro beatae quisquam, doloribus
-      facere ea cupiditate suscipit dignissimos atque aut odit saepe facilis
-      culpa?
-    </p>`;
+function NotesView({ language, word }: { language: string; word: VerseWord }) {
   const { t } = useTranslation();
-
   const [isEditing, setIsEditing] = useState(false);
 
+  const queryClient = useQueryClient();
+  const notesQuery = useQuery({
+    queryKey: ['notes', language, word.id],
+    queryFn: () =>
+      apiClient.words.findTranslatorNotes({
+        wordId: word.id,
+        language,
+      }),
+  });
+  const patchNotesMutation = useMutation({
+    mutationFn: async (variables: {
+      wordId: string;
+      content: string;
+      lastAuthorId: string;
+    }) =>
+      apiClient.words.updateTranslatorNotes({
+        wordId: variables.wordId,
+        language,
+        content: variables.content,
+        lastAuthorId: variables.lastAuthorId,
+        lastEditedAt: new Date().toISOString(),
+      }),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['notes', language, variables.wordId],
+      });
+    },
+  });
+  const { user } = useAuth();
   const userCan = useAccessControl();
   const isLanguageUser = userCan('translate', {
     type: 'Language',
     id: language,
   });
+  const notesInputRef = useRef<HTMLInputElement>(null);
+
   return (
     <>
       <div className="mb-3 text-lg font-bold">Notes</div>
-      {!isEditing && (
-        <>
-          <RichText content={loremIpsum} />
-          {isLanguageUser && (
-            <Button className="mt-4" onClick={() => setIsEditing(true)}>
-              <Icon icon="edit" /> {t('common:edit')}
-            </Button>
-          )}
-        </>
+      {notesQuery.isLoading && (
+        <div className="flex items-center justify-center w-full h-full">
+          <LoadingSpinner />
+        </div>
       )}
-      {isEditing && (
+      {notesQuery.isSuccess && (
         <>
-          <div className="mb-1 text-sm italic">
-            Edited 1 Jan 2024, by Baron Weisschmoranoff von Steimich the Third
-          </div>
-          <RichTextInput value={loremIpsum} name="translatorNotes" />
-          <div className="flex flex-row justify-end gap-4 mt-2">
-            <Button variant="tertiary" onClick={() => setIsEditing(false)}>
-              {t('common:cancel')}
-            </Button>
-            <Button>
-              <Icon icon="save" /> {t('common:save')}
-            </Button>
-          </div>
+          {!isEditing && (
+            <>
+              <RichText content={notesQuery.data.data?.content ?? ''} />
+              {isLanguageUser && (
+                <Button className="mt-4" onClick={() => setIsEditing(true)}>
+                  <Icon icon="edit" /> {t('common:edit')}
+                </Button>
+              )}
+            </>
+          )}
+          {isEditing && (
+            <>
+              <div className="mb-1 text-sm italic">
+                Edited 1 Jan 2024, by Baron Weisschmoranoff von Steimich the
+                Third
+              </div>
+              <RichTextInput
+                ref={notesInputRef}
+                value={notesQuery.data.data?.content ?? ''}
+                name="translatorNotes"
+              />
+              <div className="flex flex-row justify-end gap-4 mt-2">
+                <Button variant="tertiary" onClick={() => setIsEditing(false)}>
+                  {t('common:cancel')}
+                </Button>
+                <Button
+                  onClick={() => {
+                    console.log(notesInputRef.current?.value);
+                    patchNotesMutation.mutate({
+                      wordId: word.id,
+                      content: notesInputRef.current?.value ?? '',
+                      lastAuthorId: user!.id,
+                    });
+                  }}
+                >
+                  <Icon icon="save" /> {t('common:save')}
+                </Button>
+              </div>
+            </>
+          )}
         </>
       )}
     </>

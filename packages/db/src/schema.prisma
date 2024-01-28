@@ -25,21 +25,23 @@ enum EmailStatus {
 /// A user who can authenticate into the system.
 model AuthUser {
   /// The ID of the user.
-  id                 String                  @id @default(dbgenerated("generate_ulid()")) @db.Uuid
+  id                    String                  @id @default(dbgenerated("generate_ulid()")) @db.Uuid
   /// The display name of the user.
-  name               String?
+  name                  String?
   /// The status of the email (whether we can send emails or not).
-  emailStatus        EmailStatus             @default(UNVERIFIED)
+  emailStatus           EmailStatus             @default(UNVERIFIED)
   /// The list of system roles this user has
-  systemRoles        UserSystemRole[]
+  systemRoles           UserSystemRole[]
   /// The list of sessions for the user.
-  auth_session       AuthSession[]
+  auth_session          AuthSession[]
   /// The list of auth keys for the user
-  auth_key           AuthKey[]
+  auth_key              AuthKey[]
   /// The roles for this user on all languages.
-  languageRoles      LanguageMemberRole[]
+  languageRoles         LanguageMemberRole[]
   /// The list of emails awaiting verification.
-  emailVerifications UserEmailVerification[]
+  emailVerifications    UserEmailVerification[]
+  /// All the translator notes that this user was the last editor.
+  editedTranslatorNotes TranslatorNotes[]
 
   @@map("User")
 }
@@ -310,18 +312,24 @@ enum ResourceCode {
   STRONGS
 }
 
-/// 
+/// The translator notes attached to a word
 model TranslatorNotes {
-  /// The word these notes are attached to.
-  word       Word     @relation(fields: [wordId], references: [id])
-  /// The ID of the word these notes are attached to.
-  wordId     String   @unique
-  /// The translation language of these notes.
-  language   Language @relation(fields: [languageId], references: [id])
-  /// The ID of the translation language of these notes.
-  languageId String   @db.Uuid
   /// The content of these notes.
-  content    String
+  content      String
+  /// The timestamp these notes were last edited.
+  lastEditedAt DateTime
+  /// The word these notes are attached to.
+  word         Word     @relation(fields: [wordId], references: [id])
+  /// The ID of the word these notes are attached to.
+  wordId       String   @unique
+  /// The translation language of these notes.
+  language     Language @relation(fields: [languageId], references: [id])
+  /// The ID of the translation language of these notes.
+  languageId   String   @db.Uuid
+  /// The last author of these notes
+  lastAuthor   AuthUser @relation(fields: [lastAuthorId], references: [id])
+  /// The ID of the last auhtor of these notes.
+  lastAuthorId String   @db.Uuid
 
   @@id([wordId, languageId])
 }
