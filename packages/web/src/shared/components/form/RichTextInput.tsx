@@ -63,7 +63,6 @@ const RichTextInput = forwardRef<RichTextInputRef, RichTextInputProps>(
       },
       content: value ?? defaultValue,
       editable: editable,
-      autofocus: autoFocus,
       onCreate({ editor }) {
         const input = hiddenInput.current;
         if (input) {
@@ -105,6 +104,11 @@ const RichTextInput = forwardRef<RichTextInputRef, RichTextInputProps>(
     useEffect(() => {
       editor?.setOptions({ editable });
     }, [editable, editor]);
+
+    useEffect(() => {
+      console.log('using effect: focus');
+      if (autoFocus) editor?.commands.focus();
+    }, [editor, autoFocus]);
 
     return (
       <div className="border rounded border-slate-400 focus-within:outline focus-within:outline-2 focus-within:outline-blue-600">
