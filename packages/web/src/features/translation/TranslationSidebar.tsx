@@ -121,8 +121,7 @@ export const TranslationSidebar = ({
 };
 
 function NotesView({ language, word }: { language: string; word: VerseWord }) {
-  const { t } = useTranslation();
-  const [isEditing, setIsEditing] = useState(false);
+  const { t, i18n } = useTranslation();
 
   const queryClient = useQueryClient();
   const notesQuery = useQuery({
@@ -152,6 +151,10 @@ function NotesView({ language, word }: { language: string; word: VerseWord }) {
       });
     },
   });
+  const usersQuery = useQuery({
+    queryKey: ['users'],
+    queryFn: () => apiClient.users.findAll(),
+  });
   const { user } = useAuth();
   const userCan = useAccessControl();
   const isLanguageUser = userCan('translate', {
@@ -159,6 +162,7 @@ function NotesView({ language, word }: { language: string; word: VerseWord }) {
     id: language,
   });
   const notesInputRef = useRef<HTMLInputElement>(null);
+  const [isEditing, setIsEditing] = useState(false);
 
   return (
     <>
@@ -168,7 +172,7 @@ function NotesView({ language, word }: { language: string; word: VerseWord }) {
           <LoadingSpinner />
         </div>
       )}
-      {notesQuery.isSuccess && (
+      {notesQuery.isSuccess && usersQuery.isSuccess && (
         <>
           {!isEditing && (
             <>
@@ -183,8 +187,21 @@ function NotesView({ language, word }: { language: string; word: VerseWord }) {
           {isEditing && (
             <>
               <div className="mb-1 text-sm italic">
-                Edited 1 Jan 2024, by Baron Weisschmoranoff von Steimich the
-                Third
+                Edited{' '}
+                {new Date(
+                  notesQuery.data.data?.lastEditedAt ?? ''
+                ).toLocaleDateString(i18n.language, {
+                  hour12: true,
+                  hour: 'numeric',
+                  minute: 'numeric',
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+                })}
+                , by{' '}
+                {usersQuery.data.data.find(
+                  ({ id }) => id === notesQuery.data.data?.lastAuthorId
+                )?.name ?? 'Unknown'}
               </div>
               <RichTextInput
                 ref={notesInputRef}
