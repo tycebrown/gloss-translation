@@ -56,14 +56,21 @@ export default createRoute<{ code: string; wordId: string }>()
         return;
       }
 
-      await client.translatorNotes.update({
+      await client.translatorNotes.upsert({
         where: {
           wordId_languageId: {
             wordId: req.query.wordId,
             languageId: language.id,
           },
         },
-        data: {
+        update: {
+          content: req.body.content,
+          lastAuthorId: req.body.lastAuthorId,
+          lastEditedAt: req.body.lastEditedAt,
+        },
+        create: {
+          wordId: req.query.wordId,
+          languageId: language.id,
           content: req.body.content,
           lastAuthorId: req.body.lastAuthorId,
           lastEditedAt: req.body.lastEditedAt,

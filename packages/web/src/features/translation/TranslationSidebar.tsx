@@ -190,6 +190,10 @@ function NotesView({ language, word }: { language: string; word: VerseWord }) {
                 ref={notesInputRef}
                 value={notesQuery.data.data?.content ?? ''}
                 name="translatorNotes"
+                editable={
+                  !notesQuery.isFetching && !updateNotesMutation.isLoading
+                }
+                autoFocus
               />
               <div className="flex flex-row justify-end gap-4 mt-2">
                 <Button

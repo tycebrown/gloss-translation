@@ -107,21 +107,21 @@ const RichTextInput = forwardRef<RichTextInputRef, RichTextInputProps>(
           <div className="flex gap-1">
             <RichTextInputButton
               active={editor?.isActive('bold')}
-              disabled={!editor?.can().toggleBold()}
+              disabled={!editable || !editor?.can().toggleBold()}
               icon="bold"
               label={t('common:rich_text.bold_tooltip')}
               onClick={() => editor?.chain().focus().toggleBold().run()}
             />
             <RichTextInputButton
               active={editor?.isActive('italic')}
-              disabled={!editor?.can().toggleItalic()}
+              disabled={!editable || !editor?.can().toggleItalic()}
               icon="italic"
               label={t('common:rich_text.italic_tooltip')}
               onClick={() => editor?.chain().focus().toggleItalic().run()}
             />
             <RichTextInputButton
               active={editor?.isActive('strike')}
-              disabled={!editor?.can().toggleStrike()}
+              disabled={!editable || !editor?.can().toggleStrike()}
               icon="strikethrough"
               label={t('common:rich_text.strike_tooltip')}
               onClick={() => editor?.chain().focus().toggleStrike().run()}
@@ -130,20 +130,20 @@ const RichTextInput = forwardRef<RichTextInputRef, RichTextInputProps>(
           <div className="flex gap-1">
             <RichTextInputButton
               active={editor?.isActive('bulletList')}
-              disabled={!editor?.can().toggleBulletList()}
+              disabled={!editable || !editor?.can().toggleBulletList()}
               icon="list-ul"
               label={t('common:rich_text.bullet_list_tooltip')}
               onClick={() => editor?.chain().focus().toggleBulletList().run()}
             />
             <RichTextInputButton
               active={editor?.isActive('orderedList')}
-              disabled={!editor?.can().toggleOrderedList()}
+              disabled={!editable || !editor?.can().toggleOrderedList()}
               icon="list-ol"
               label={t('common:rich_text.ordered_list_tooltip')}
               onClick={() => editor?.chain().focus().toggleOrderedList().run()}
             />
             <RichTextInputButton
-              disabled={!editor?.can().sinkListItem('listItem')}
+              disabled={!editable || !editor?.can().sinkListItem('listItem')}
               icon="indent"
               label={t('common:rich_text.indent_tooltip')}
               onClick={() =>
@@ -151,7 +151,7 @@ const RichTextInput = forwardRef<RichTextInputRef, RichTextInputProps>(
               }
             />
             <RichTextInputButton
-              disabled={!editor?.can().liftListItem('listItem')}
+              disabled={!editable || !editor?.can().liftListItem('listItem')}
               icon="outdent"
               label={t('common:rich_text.outdent_tooltip')}
               onClick={() =>
