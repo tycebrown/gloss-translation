@@ -215,6 +215,4 @@ export interface GetNotesResponseBody {
 
 export interface PatchNotesRequestBody {
   content: string;
-  lastAuthorId: string;
-  lastEditedAt: string;
 }

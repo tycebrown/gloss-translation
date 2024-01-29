@@ -36,8 +36,6 @@ export default createRoute<{ code: string; wordId: string }>()
   .patch<PatchNotesRequestBody, void>({
     schema: z.object({
       content: z.string(),
-      lastAuthorId: z.string(),
-      lastEditedAt: z.string().datetime(),
     }),
     authorize: authorize((req) => ({
       action: 'translate',
@@ -51,10 +49,13 @@ export default createRoute<{ code: string; wordId: string }>()
         },
       });
 
-      if (!language) {
+      if (!language || !req.session || !req.session.user) {
         res.notFound();
         return;
       }
+
+      const lastAuthorId = req.session.user.id;
+      const lastEditedAt = new Date();
 
       await client.translatorNotes.upsert({
         where: {
@@ -65,15 +66,15 @@ export default createRoute<{ code: string; wordId: string }>()
         },
         update: {
           content: req.body.content,
-          lastAuthorId: req.body.lastAuthorId,
-          lastEditedAt: req.body.lastEditedAt,
+          lastAuthorId,
+          lastEditedAt,
         },
         create: {
           wordId: req.query.wordId,
           languageId: language.id,
           content: req.body.content,
-          lastAuthorId: req.body.lastAuthorId,
-          lastEditedAt: req.body.lastEditedAt,
+          lastAuthorId,
+          lastEditedAt,
         },
       });
 

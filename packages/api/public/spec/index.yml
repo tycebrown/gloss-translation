@@ -40,6 +40,8 @@ paths:
     $ref: ./paths/translation/verse-glosses.yml
   /languages/{code}/words/{wordId}:
     $ref: ./paths/languages/language-words.yml
+  /languages/{code}/words/{wordId}/notes:
+    $ref: ./paths/translation/translator-notes.yml
   /languages/{code}/members:
     $ref: ./paths/languages/language-members.yml
   /languages/{code}/members/{userId}:

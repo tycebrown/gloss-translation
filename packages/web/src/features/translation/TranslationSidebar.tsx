@@ -11,7 +11,6 @@ import RichText from '../../shared/components/RichText';
 import { useRef, useState } from 'react';
 import { useAccessControl } from '../../shared/accessControl';
 import Button from '../../shared/components/actions/Button';
-import useAuth from '../../shared/hooks/useAuth';
 
 type TranslationSidebarProps = {
   language: string;
@@ -133,17 +132,11 @@ function NotesView({ language, word }: { language: string; word: VerseWord }) {
       }),
   });
   const updateNotesMutation = useMutation({
-    mutationFn: async (variables: {
-      wordId: string;
-      content: string;
-      lastAuthorId: string;
-    }) =>
+    mutationFn: async (variables: { wordId: string; content: string }) =>
       apiClient.words.updateTranslatorNotes({
         wordId: variables.wordId,
         language,
         content: variables.content,
-        lastAuthorId: variables.lastAuthorId,
-        lastEditedAt: new Date().toISOString(),
       }),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
@@ -155,7 +148,6 @@ function NotesView({ language, word }: { language: string; word: VerseWord }) {
     queryKey: ['users'],
     queryFn: () => apiClient.users.findAll(),
   });
-  const { user } = useAuth();
   const userCan = useAccessControl();
   const isLanguageUser = userCan('translate', {
     type: 'Language',
@@ -178,7 +170,13 @@ function NotesView({ language, word }: { language: string; word: VerseWord }) {
             <>
               <RichText content={notesQuery.data.data?.content ?? ''} />
               {isLanguageUser && (
-                <Button className="mt-4" onClick={() => setIsEditing(true)}>
+                <Button
+                  className="mt-4"
+                  onClick={() => setIsEditing(true)}
+                  disabled={
+                    notesQuery.isFetching || updateNotesMutation.isLoading
+                  }
+                >
                   <Icon icon="edit" /> {t('common:edit')}
                 </Button>
               )}
@@ -228,8 +226,8 @@ function NotesView({ language, word }: { language: string; word: VerseWord }) {
                     updateNotesMutation.mutate({
                       wordId: word.id,
                       content: notesInputRef.current?.value ?? '',
-                      lastAuthorId: user!.id,
                     });
+                    setIsEditing(false);
                   }}
                   disabled={updateNotesMutation.isLoading}
                 >

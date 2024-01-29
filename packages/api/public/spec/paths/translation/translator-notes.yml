@@ -1,0 +1,49 @@
+get:
+  tags:
+    - Languages
+  summary: Get the translator notes on a word
+  parameters:
+    - $ref: '../../schemas/parameters.yml#languageCode'
+    - $ref: '../../schemas/parameters.yml#verseId'
+  responses:
+    '200':
+      description: Ok
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: object
+                nullable: true
+                properties:
+                  content:
+                    type: string
+                    description: The content of the notes
+                  lastEditedAt:
+                    type: string
+                    format: date
+                    description: A timestamp of when the notes were last edited
+                  lastAuthorId:
+                    type: string
+                    description: The unique ID of the last author of these notes
+patch:
+  tags:
+    - Languages
+  summary: Update the translator notes on a word
+  parameters:
+    - $ref: '../../schemas/parameters.yml#languageCode'
+    - $ref: '../../schemas/parameters.yml#verseId'
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            content:
+              type: string
+              description: The updated content of the notes
+  responses:
+    201:
+      description: Created
