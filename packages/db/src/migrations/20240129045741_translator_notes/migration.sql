@@ -1,8 +1,10 @@
 -- CreateTable
 CREATE TABLE "TranslatorNotes" (
+    "content" TEXT NOT NULL,
+    "lastEditedAt" TIMESTAMP(3) NOT NULL,
     "wordId" TEXT NOT NULL,
     "languageId" UUID NOT NULL,
-    "content" TEXT NOT NULL,
+    "lastAuthorId" UUID NOT NULL,
 
     CONSTRAINT "TranslatorNotes_pkey" PRIMARY KEY ("wordId","languageId")
 );
@@ -15,3 +17,6 @@ ALTER TABLE "TranslatorNotes" ADD CONSTRAINT "TranslatorNotes_wordId_fkey" FOREI
 
 -- AddForeignKey
 ALTER TABLE "TranslatorNotes" ADD CONSTRAINT "TranslatorNotes_languageId_fkey" FOREIGN KEY ("languageId") REFERENCES "Language"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "TranslatorNotes" ADD CONSTRAINT "TranslatorNotes_lastAuthorId_fkey" FOREIGN KEY ("lastAuthorId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
