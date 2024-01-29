@@ -10,5 +10,6 @@
   "revoke_tooltip": "إبطال الموافقة (الهروب)",
   "saving": "جاري الحفظ",
   "select_verse": "حدد الآية",
-  "strongs": "أقوياء"
+  "strongs": "أقوياء",
+  "last_edited": "آخر تعديل {{timestamp}}، بواسطة {{author}}"
 }

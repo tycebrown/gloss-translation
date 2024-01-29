@@ -125,7 +125,7 @@ function NotesView({ language, word }: { language: string; word: VerseWord }) {
 
   const queryClient = useQueryClient();
   const notesQuery = useQuery({
-    queryKey: ['notes', language, word.id],
+    queryKey: ['translator-notes', language, word.id],
     queryFn: () =>
       apiClient.words.findTranslatorNotes({
         wordId: word.id,
@@ -147,7 +147,7 @@ function NotesView({ language, word }: { language: string; word: VerseWord }) {
       }),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ['notes', language, variables.wordId],
+        queryKey: ['translator-notes', language, variables.wordId],
       });
     },
   });
@@ -187,21 +187,23 @@ function NotesView({ language, word }: { language: string; word: VerseWord }) {
           {isEditing && (
             <>
               <div className="mb-1 text-sm italic">
-                Edited{' '}
-                {new Date(
-                  notesQuery.data.data?.lastEditedAt ?? ''
-                ).toLocaleDateString(i18n.language, {
-                  hour12: true,
-                  hour: 'numeric',
-                  minute: 'numeric',
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric',
-                })}
-                , by{' '}
-                {usersQuery.data.data.find(
-                  ({ id }) => id === notesQuery.data.data?.lastAuthorId
-                )?.name ?? 'Unknown'}
+                {notesQuery.data.data &&
+                  t('translate:last_edited', {
+                    timestamp: new Date(
+                      notesQuery.data.data.lastEditedAt
+                    ).toLocaleDateString(i18n.language, {
+                      hour12: true,
+                      hour: 'numeric',
+                      minute: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                    }),
+                    author:
+                      usersQuery.data.data.find(
+                        ({ id }) => id === notesQuery.data.data?.lastAuthorId
+                      )?.name ?? 'Unknown',
+                  })}
               </div>
               <RichTextInput
                 ref={notesInputRef}
