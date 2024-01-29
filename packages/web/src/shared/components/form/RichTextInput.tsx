@@ -10,6 +10,8 @@ export interface RichTextInputProps {
   defaultValue?: string;
   onChange?(value: string): void;
   onBlur?(): void;
+  editable?: boolean;
+  autoFocus?: boolean;
   'aria-labelledby'?: string;
   'aria-label'?: string;
 }
@@ -29,7 +31,19 @@ export const extensions = [
 ];
 
 const RichTextInput = forwardRef<RichTextInputRef, RichTextInputProps>(
-  ({ name, onChange, onBlur, value, defaultValue, ...props }, ref) => {
+  (
+    {
+      name,
+      onChange,
+      onBlur,
+      value,
+      defaultValue,
+      editable,
+      autoFocus,
+      ...props
+    },
+    ref
+  ) => {
     const { t } = useTranslation(['common']);
     const hiddenInput = useRef<HTMLInputElement | null>(null);
 
@@ -42,6 +56,7 @@ const RichTextInput = forwardRef<RichTextInputRef, RichTextInputProps>(
         },
       },
       content: value ?? defaultValue,
+      editable: editable,
       onCreate({ editor }) {
         const input = hiddenInput.current;
         if (input) {
@@ -67,6 +82,15 @@ const RichTextInput = forwardRef<RichTextInputRef, RichTextInputProps>(
     useEffect(() => {
       editor?.commands.setContent(value ?? '', false);
     }, [value, editor]);
+
+    useEffect(() => {
+      editor?.setOptions({ editable });
+    }, [editable, editor]);
+
+    useEffect(() => {
+      console.log('using effect: focus');
+      if (autoFocus) editor?.commands.focus();
+    }, [editor, autoFocus]);
 
     return (
       <div className="border rounded border-slate-400 focus-within:outline focus-within:outline-2 focus-within:outline-blue-600">
