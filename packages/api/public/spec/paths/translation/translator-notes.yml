@@ -53,3 +53,5 @@ patch:
   responses:
     201:
       description: Created
+    500:
+      description: 'Error: No User Session'
