@@ -31,27 +31,3 @@ get:
                 - content: <p>Lorem ipsum dolor sit amet consectur</p>
                   lastEditedAt: '2024-01-30T03:44:06Z'
                   lastAuthorId: 018D5878-C795-D858-A986-C45C46230EF6
-patch:
-  tags:
-    - Languages
-  summary: Update the translator notes on a word
-  parameters:
-    - $ref: '../../schemas/parameters.yml#languageCode'
-    - $ref: '../../schemas/parameters.yml#verseId'
-  requestBody:
-    required: true
-    content:
-      application/json:
-        schema:
-          type: object
-          properties:
-            content:
-              type: string
-              description: The updated content of the notes
-              example:
-                - content: <p>Hello World!</p>
-  responses:
-    201:
-      description: Created
-    500:
-      description: 'Error: No User Session'

@@ -29,7 +29,7 @@ export default class Verses {
     ...body
   }: { wordId: string; language: string } & UpdateNotesRequestBody) {
     await this.client.patch({
-      path: `/api/languages/${language}/words/${wordId}/notes`,
+      path: `/api/languages/${language}/words/${wordId}/note`,
       body,
     });
   }

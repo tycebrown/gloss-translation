@@ -1,0 +1,24 @@
+patch:
+  tags:
+    - Languages
+  summary: Update the translator notes on a word
+  parameters:
+    - $ref: '../../schemas/parameters.yml#languageCode'
+    - $ref: '../../schemas/parameters.yml#verseId'
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            content:
+              type: string
+              description: The updated content of the notes
+              example:
+                - content: <p>Hello World!</p>
+  responses:
+    201:
+      description: Created
+    500:
+      description: 'Error: No User Session'
