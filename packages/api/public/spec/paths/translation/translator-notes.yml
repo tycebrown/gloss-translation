@@ -27,6 +27,10 @@ get:
                   lastAuthorId:
                     type: string
                     description: The unique ID of the last author of these notes
+              example:
+                - content: <p>Lorem ipsum dolor sit amet consectur</p>
+                  lastEditedAt: '2024-01-30T03:44:06Z'
+                  lastAuthorId: 018D5878-C795-D858-A986-C45C46230EF6
 patch:
   tags:
     - Languages
@@ -44,6 +48,8 @@ patch:
             content:
               type: string
               description: The updated content of the notes
+              example:
+                - content: <p>Hello World!</p>
   responses:
     201:
       description: Created
