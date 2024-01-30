@@ -51,7 +51,7 @@ const RichTextInput = forwardRef<RichTextInputRef, RichTextInputProps>(
     ref
   ) => {
     const { t } = useTranslation(['common']);
-    const hiddenInput = useRef<HTMLInputElement | null>(null);
+    const hiddenInput = useRef<HTMLInputElement>(null);
 
     const editor = useEditor({
       extensions,
