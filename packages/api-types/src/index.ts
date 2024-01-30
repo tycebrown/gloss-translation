@@ -209,10 +209,16 @@ export interface GetLemmaResourcesResponseBody {
   data: Record<string, Resource[]>;
 }
 
-export interface GetNotesResponseBody {
-  data: { content: string; lastEditedAt: Date; lastAuthorId: string } | null;
+export interface TranslatorNote {
+  wordId: string;
+  content: string;
+  lastEditedAt: Date;
+  lastAuthorId: string;
+}
+export interface GetVerseNotesResponseBody {
+  data: { [wordId: string]: TranslatorNote };
 }
 
-export interface PatchNotesRequestBody {
+export interface UpdateNotesRequestBody {
   content: string;
 }

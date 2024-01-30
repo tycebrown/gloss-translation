@@ -1,6 +1,5 @@
 import type {
-  GetNotesResponseBody as GetTranslatorNotesResponseBody,
-  PatchNotesRequestBody as PatchTranslatorNotesRequestBody,
+  UpdateNotesRequestBody,
   PatchWordGlossRequestBody,
 } from '@translation/api-types';
 import ApiClient from './client';
@@ -24,23 +23,11 @@ export default class Verses {
     });
   }
 
-  findTranslatorNotes({
-    wordId,
-    language,
-  }: {
-    wordId: string;
-    language: string;
-  }): Promise<GetTranslatorNotesResponseBody> {
-    return this.client.get({
-      path: `/api/languages/${language}/words/${wordId}/notes`,
-    });
-  }
-
   async updateTranslatorNotes({
     wordId,
     language,
     ...body
-  }: { wordId: string; language: string } & PatchTranslatorNotesRequestBody) {
+  }: { wordId: string; language: string } & UpdateNotesRequestBody) {
     await this.client.patch({
       path: `/api/languages/${language}/words/${wordId}/notes`,
       body,

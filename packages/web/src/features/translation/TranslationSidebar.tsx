@@ -1,5 +1,5 @@
 import { Tab } from '@headlessui/react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { Verse, VerseWord } from '@translation/api-types';
 import DOMPurify from 'dompurify';
 import { useTranslation } from 'react-i18next';
@@ -109,7 +109,7 @@ export const TranslationSidebar = ({
               )}
             </Tab.Panel>
             <Tab.Panel>
-              <NotesView language={language} word={word} />
+              <NotesView language={language} word={word} verse={verse} />
             </Tab.Panel>
             {showComments && <Tab.Panel>{t('common:coming_soon')}</Tab.Panel>}
           </Tab.Panels>
@@ -119,18 +119,26 @@ export const TranslationSidebar = ({
   );
 };
 
-function NotesView({ language, word }: { language: string; word: VerseWord }) {
+function NotesView({
+  language,
+  word,
+  verse,
+}: {
+  language: string;
+  word: VerseWord;
+  verse: Verse;
+}) {
   const { t, i18n } = useTranslation();
 
-  const queryClient = useQueryClient();
   const notesQuery = useQuery({
-    queryKey: ['translator-notes', language, word.id],
+    queryKey: ['translator-notes', language, verse.id],
     queryFn: () =>
-      apiClient.words.findTranslatorNotes({
-        wordId: word.id,
+      apiClient.verses.findTranslatorNotes({
+        verseId: verse.id,
         language,
       }),
   });
+  const note = notesQuery.isSuccess ? notesQuery.data.data[word.id] : undefined;
   const updateNotesMutation = useMutation({
     mutationFn: async (variables: { wordId: string; content: string }) =>
       apiClient.words.updateTranslatorNotes({
@@ -138,10 +146,8 @@ function NotesView({ language, word }: { language: string; word: VerseWord }) {
         language,
         content: variables.content,
       }),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: ['translator-notes', language, variables.wordId],
-      });
+    onSuccess: () => {
+      notesQuery.refetch();
     },
   });
   const usersQuery = useQuery({
@@ -168,7 +174,7 @@ function NotesView({ language, word }: { language: string; word: VerseWord }) {
         <>
           {!isEditing && (
             <>
-              <RichText content={notesQuery.data.data?.content ?? ''} />
+              <RichText content={note?.content ?? ''} />
               {isLanguageUser && (
                 <Button
                   className="mt-4"
@@ -185,27 +191,28 @@ function NotesView({ language, word }: { language: string; word: VerseWord }) {
           {isEditing && (
             <>
               <div className="mb-1 text-sm italic">
-                {notesQuery.data.data &&
+                {note &&
                   t('translate:last_edited', {
-                    timestamp: new Date(
-                      notesQuery.data.data.lastEditedAt
-                    ).toLocaleDateString(i18n.language, {
-                      hour12: true,
-                      hour: 'numeric',
-                      minute: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                    }),
+                    timestamp: new Date(note.lastEditedAt).toLocaleDateString(
+                      i18n.language,
+                      {
+                        hour12: true,
+                        hour: 'numeric',
+                        minute: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                      }
+                    ),
                     author:
                       usersQuery.data.data.find(
-                        ({ id }) => id === notesQuery.data.data?.lastAuthorId
+                        ({ id }) => id === note.lastAuthorId
                       )?.name ?? 'Unknown',
                   })}
               </div>
               <RichTextInput
                 ref={notesInputRef}
-                value={notesQuery.data.data?.content ?? ''}
+                value={note?.content ?? ''}
                 name="translatorNotes"
                 editable={
                   !notesQuery.isFetching && !updateNotesMutation.isLoading
