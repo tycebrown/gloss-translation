@@ -33,7 +33,7 @@ export default class Verses {
     });
   }
 
-  async addComment({
+  async postComment({
     wordId,
     language,
     ...body

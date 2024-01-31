@@ -10,7 +10,6 @@ import { useEffect, useRef, useState } from 'react';
 import Button from '../../shared/components/actions/Button';
 import RichTextInput from '../../shared/components/form/RichTextInput';
 import RichText from '../../shared/components/RichText';
-import useAuth from '../../shared/hooks/useAuth';
 
 type TranslationSidebarProps = {
   language: string;
@@ -120,7 +119,6 @@ interface CommentsViewProps {
   word: VerseWord;
 }
 function CommentsView({ language, word }: CommentsViewProps) {
-  const { user } = useAuth();
   const { t } = useTranslation();
 
   const queryClient = useQueryClient();
@@ -129,13 +127,12 @@ function CommentsView({ language, word }: CommentsViewProps) {
     queryFn: () => apiClient.words.findWordComments(word.id, language),
   });
   const comments = commentsQuery.isSuccess ? commentsQuery.data.data : [];
-  const addCommentMutation = useMutation({
-    mutationFn: ({ authorId, body }: { authorId: string; body: string }) =>
-      apiClient.words.addComment({
+  const postCommentMutation = useMutation({
+    mutationFn: ({ body }: { body: string }) =>
+      apiClient.words.postComment({
         wordId: word.id,
         language,
         body: body,
-        authorId: authorId,
       }),
     onSuccess: () =>
       queryClient.invalidateQueries(['word-comments', language, word.id]),
@@ -152,7 +149,7 @@ function CommentsView({ language, word }: CommentsViewProps) {
       <div className="mt-1 mb-4">
         <Button
           className={`text-sm`}
-          disabled={isCommentEditorOpen || addCommentMutation.isLoading}
+          disabled={isCommentEditorOpen || postCommentMutation.isLoading}
           onClick={() => setIsCommentEditorOpen(true)}
         >
           <Icon icon="plus" /> {t('common:comment')}
@@ -160,33 +157,32 @@ function CommentsView({ language, word }: CommentsViewProps) {
 
         <div
           className={`mt-4 ${
-            isCommentEditorOpen || addCommentMutation.isLoading ? '' : 'hidden'
+            isCommentEditorOpen || postCommentMutation.isLoading ? '' : 'hidden'
           }`}
         >
           <RichTextInput
             name="commentBody"
             ref={commentInputRef}
-            disabled={addCommentMutation.isLoading}
+            disabled={postCommentMutation.isLoading}
           />
           <div className="h-2" />
           <div className="flex flex-row justify-end gap-4">
             <Button
               variant="tertiary"
               onClick={() => setIsCommentEditorOpen(false)}
-              disabled={addCommentMutation.isLoading}
+              disabled={postCommentMutation.isLoading}
             >
               {t('common:cancel')}
             </Button>
             <Button
               className="text-sm font-bold"
               onClick={() => {
-                addCommentMutation.mutate({
-                  authorId: user?.id ?? '',
+                postCommentMutation.mutate({
                   body: commentInputRef.current?.value ?? '',
                 });
                 setIsCommentEditorOpen(false);
               }}
-              disabled={addCommentMutation.isLoading}
+              disabled={postCommentMutation.isLoading}
             >
               <Icon icon="comment" /> {t('common:submit')}
             </Button>
@@ -223,7 +219,7 @@ function CommentThreadView({ comment }: { comment: CommentThread }) {
             </button>
             {usersQuery.isLoading && <LoadingSpinner className="inline" />}
             {usersQuery.isSuccess &&
-              usersQuery?.data.data.find(({ id }) => id === comment.authorId)
+              usersQuery?.data.data.find(({ id }) => id === comment.author.id)
                 ?.name}
           </div>
           <div className="text-sm">
