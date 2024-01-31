@@ -172,7 +172,7 @@ function NotesView({
         <>
           <div className="mb-1 text-sm italic">
             {updateNotesMutation.isLoading ? (
-              <>Saving...</>
+              <>{t('translate:saving')}...</>
             ) : (
               t('translate:last_edited', {
                 timestamp: new Date(note.lastEditedAt).toLocaleDateString(
@@ -196,7 +196,6 @@ function NotesView({
               value={note?.content ?? ''}
               name="translatorNotes"
               onChange={debouncedSave}
-              onBlur={() => console.log('oh no blurring!!!!!!!')}
               autoFocus
             />
           )}
