@@ -168,39 +168,39 @@ function NotesView({
           <LoadingSpinner />
         </div>
       )}
-      {note && (
-        <>
-          <div className="mb-1 text-sm italic">
-            {updateNotesMutation.isLoading ? (
-              <>{t('translate:saving')}...</>
-            ) : (
-              t('translate:last_edited', {
-                timestamp: new Date(note.lastEditedAt).toLocaleDateString(
-                  i18n.language,
-                  {
-                    hour12: true,
-                    hour: 'numeric',
-                    minute: 'numeric',
-                    month: 'numeric',
-                    day: 'numeric',
-                    year: 'numeric',
-                  }
-                ),
-                author: note.lastAuthor?.name ?? 'Unknown',
-              })
-            )}
-          </div>
-          {!canEdit && <RichText content={note?.content ?? ''} />}
-          {canEdit && (
+      {note &&
+        (canEdit ? (
+          <>
+            <div className="mb-1 text-sm italic">
+              {updateNotesMutation.isLoading ? (
+                <>{t('translate:saving')}...</>
+              ) : (
+                t('translate:last_edited', {
+                  timestamp: new Date(note.lastEditedAt).toLocaleDateString(
+                    i18n.language,
+                    {
+                      hour12: true,
+                      hour: 'numeric',
+                      minute: 'numeric',
+                      month: 'numeric',
+                      day: 'numeric',
+                      year: 'numeric',
+                    }
+                  ),
+                  author: note.lastAuthor?.name ?? 'Unknown',
+                })
+              )}
+            </div>
             <RichTextInput
               value={note?.content ?? ''}
               name="translatorNotes"
               onChange={debouncedSave}
               autoFocus
             />
-          )}
-        </>
-      )}
+          </>
+        ) : (
+          <RichText content={note?.content ?? ''} />
+        ))}
     </>
   );
 }
