@@ -27,7 +27,7 @@ export default createRoute<{ code: string; wordId: string }>()
       }
 
       if (!req.session || !req.session.user) {
-        res.internalError([{ code: 'NoSession' }]);
+        res.unauthorized();
         return;
       }
 

@@ -52,8 +52,6 @@ export interface ResponseHelper<Body> {
   invalid(errors: ErrorDetail[]): void;
   /** Returns 400 with a list of errors. */
   badRequest(errors: ErrorDetail[]): void;
-  /** Returns 500 with a list of errors. */
-  internalError(errors: ErrorDetail[]): void;
 }
 
 export type RouteDefinition<Params, RequestBody, ResponseBody> = {
@@ -198,9 +196,6 @@ export default function createRoute<
         },
         badRequest(errors: ErrorDetail[]) {
           res.status(400).json({ errors });
-        },
-        internalError(errors: ErrorDetail[]) {
-          res.status(500).json({ errors });
         },
       };
 
