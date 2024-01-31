@@ -27,8 +27,7 @@ export default createRoute<{ code: string; wordId: string }>()
       }
 
       if (!req.session || !req.session.user) {
-        res.unauthorized();
-        return;
+        throw new Error('No User Session');
       }
 
       const lastAuthorId = req.session.user.id;
