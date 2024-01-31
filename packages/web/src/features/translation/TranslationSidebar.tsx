@@ -10,6 +10,7 @@ import RichTextInput from '../../shared/components/form/RichTextInput';
 import RichText from '../../shared/components/RichText';
 import { useAccessControl } from '../../shared/accessControl';
 import { useDebouncedChangeHandler } from '../../shared/hooks/useDebouncedChangeHandler';
+import { useState } from 'react';
 
 type TranslationSidebarProps = {
   language: string;
@@ -129,7 +130,16 @@ function NotesView({
 }) {
   const { t, i18n } = useTranslation();
 
-  const notesQuery = useQuery({
+  const [translatorNotesOpen, setTranslatorNotesOpen] = useState(false);
+  const [footnotesOpen, setFootnotesOpen] = useState(false);
+
+  const userCan = useAccessControl();
+  const canEdit = userCan('translate', {
+    type: 'Language',
+    id: language,
+  });
+
+  const translatorNotesQuery = useQuery({
     queryKey: ['translator-notes', language, verse.id],
     queryFn: () =>
       apiClient.verses.findTranslatorNotes({
@@ -137,8 +147,10 @@ function NotesView({
         language,
       }),
   });
-  const note = notesQuery.isSuccess ? notesQuery.data.data[word.id] : undefined;
-  const updateNotesMutation = useMutation({
+  const translatorNote = translatorNotesQuery.isSuccess
+    ? translatorNotesQuery.data.data[word.id]
+    : undefined;
+  const updateTranslatorNoteMutation = useMutation({
     mutationFn: async (variables: { wordId: string; content: string }) =>
       apiClient.words.updateTranslatorNote({
         wordId: variables.wordId,
@@ -146,61 +158,152 @@ function NotesView({
         content: variables.content,
       }),
     onSuccess: () => {
-      notesQuery.refetch();
+      translatorNotesQuery.refetch();
     },
   });
-  const userCan = useAccessControl();
-  const canEdit = userCan('translate', {
-    type: 'Language',
-    id: language,
-  });
+  const debouncedSaveTranslatorNote = useDebouncedChangeHandler<string>(
+    (value) =>
+      updateTranslatorNoteMutation.mutate({ wordId: word.id, content: value }),
+    1000
+  );
 
-  const debouncedSave = useDebouncedChangeHandler<string>(
-    (value) => updateNotesMutation.mutate({ wordId: word.id, content: value }),
+  const footnotesQuery = useQuery({
+    queryKey: ['footnotes', language, verse.id],
+    queryFn: () =>
+      apiClient.verses.findFootnotes({
+        verseId: verse.id,
+        language,
+      }),
+  });
+  const footnote = translatorNotesQuery.isSuccess
+    ? translatorNotesQuery.data.data[word.id]
+    : undefined;
+  const updateFootnoteMutation = useMutation({
+    mutationFn: async (variables: { wordId: string; content: string }) =>
+      apiClient.words.updateFootnote({
+        wordId: variables.wordId,
+        language,
+        content: variables.content,
+      }),
+    onSuccess: () => {
+      footnotesQuery.refetch();
+    },
+  });
+  const debouncedSaveFootnote = useDebouncedChangeHandler<string>(
+    (value) =>
+      updateTranslatorNoteMutation.mutate({ wordId: word.id, content: value }),
     1000
   );
 
   return (
     <>
       <div className="mb-3 text-lg font-bold">Notes</div>
-      {notesQuery.isLoading && (
-        <div className="flex items-center justify-center w-full h-full">
-          <LoadingSpinner />
+      <div className="mb-1 font-bold">
+        <button
+          className="w-4"
+          onClick={() => setTranslatorNotesOpen(!translatorNotesOpen)}
+        >
+          <Icon
+            icon={translatorNotesOpen ? 'chevron-down' : 'chevron-right'}
+            className={!translatorNotesOpen ? 'rtl:rotate-180' : ''}
+          />
+        </button>{' '}
+        Translator Notes
+      </div>
+      {translatorNotesOpen && (
+        <div className="mb-2.5 ms-4">
+          {translatorNotesQuery.isLoading && (
+            <div className="flex items-center justify-center w-full h-full">
+              <LoadingSpinner />
+            </div>
+          )}
+          {translatorNote &&
+            (canEdit ? (
+              <>
+                <div className="mb-1 text-sm italic">
+                  {updateTranslatorNoteMutation.isLoading ? (
+                    <>{t('translate:saving')}...</>
+                  ) : (
+                    t('translate:last_edited', {
+                      timestamp: new Date(
+                        translatorNote.lastEditedAt
+                      ).toLocaleDateString(i18n.language, {
+                        hour12: true,
+                        hour: 'numeric',
+                        minute: 'numeric',
+                        month: 'numeric',
+                        day: 'numeric',
+                        year: 'numeric',
+                      }),
+                      author: translatorNote.lastAuthor?.name ?? 'Unknown',
+                    })
+                  )}
+                </div>
+                <RichTextInput
+                  value={translatorNote?.content ?? ''}
+                  name="translatorNotes"
+                  onChange={debouncedSaveTranslatorNote}
+                  autoFocus
+                />
+              </>
+            ) : (
+              <RichText content={translatorNote?.content ?? ''} />
+            ))}
         </div>
       )}
-      {note &&
-        (canEdit ? (
-          <>
-            <div className="mb-1 text-sm italic">
-              {updateNotesMutation.isLoading ? (
-                <>{t('translate:saving')}...</>
-              ) : (
-                t('translate:last_edited', {
-                  timestamp: new Date(note.lastEditedAt).toLocaleDateString(
-                    i18n.language,
-                    {
-                      hour12: true,
-                      hour: 'numeric',
-                      minute: 'numeric',
-                      month: 'numeric',
-                      day: 'numeric',
-                      year: 'numeric',
-                    }
-                  ),
-                  author: note.lastAuthor?.name ?? 'Unknown',
-                })
-              )}
+      <div className="mb-1 font-bold">
+        <button
+          className="w-4"
+          onClick={() => setFootnotesOpen(!footnotesOpen)}
+        >
+          <Icon
+            icon={footnotesOpen ? 'chevron-down' : 'chevron-right'}
+            className={!footnotesOpen ? 'rtl:rotate-180' : ''}
+          />
+        </button>{' '}
+        Footnotes
+      </div>
+      {footnotesOpen && (
+        <div className="mb-2.5 ms-4">
+          {footnotesQuery.isLoading && (
+            <div className="flex items-center justify-center w-full h-full">
+              <LoadingSpinner />
             </div>
-            <RichTextInput
-              value={note?.content ?? ''}
-              name="translatorNotes"
-              onChange={debouncedSave}
-              autoFocus
-            />
-          </>
-        ) : (
-          <RichText content={note?.content ?? ''} />
-        ))}
+          )}
+          {footnote &&
+            (canEdit ? (
+              <>
+                <div className="mb-1 text-sm italic">
+                  {updateFootnoteMutation.isLoading ? (
+                    <>{t('translate:saving')}...</>
+                  ) : (
+                    t('translate:last_edited', {
+                      timestamp: new Date(
+                        footnote.lastEditedAt
+                      ).toLocaleDateString(i18n.language, {
+                        hour12: true,
+                        hour: 'numeric',
+                        minute: 'numeric',
+                        month: 'numeric',
+                        day: 'numeric',
+                        year: 'numeric',
+                      }),
+                      author: footnote.lastAuthor?.name ?? 'Unknown',
+                    })
+                  )}
+                </div>
+                <RichTextInput
+                  value={footnote?.content ?? ''}
+                  name="translatorNotes"
+                  onChange={debouncedSaveFootnote}
+                  autoFocus
+                />
+              </>
+            ) : (
+              <RichText content={footnote?.content ?? ''} />
+            ))}
+        </div>
+      )}
     </>
   );
 }

@@ -38,11 +38,11 @@ paths:
     $ref: ./paths/translation/translations.yml
   /languages/{code}/verses/{verseId}/glosses:
     $ref: ./paths/translation/verse-glosses.yml
-  /languages/{code}/verses/{verseId}/notes:
+  /languages/{code}/verses/{verseId}/translator-notes:
     $ref: ./paths/translation/translator-notes.yml
   /languages/{code}/words/{wordId}:
     $ref: ./paths/languages/language-words.yml
-  /languages/{code}/words/{wordId}/note:
+  /languages/{code}/words/{wordId}/translator-note:
     $ref: ./paths/translation/update-translator-note.yml
   /languages/{code}/members:
     $ref: ./paths/languages/language-members.yml
