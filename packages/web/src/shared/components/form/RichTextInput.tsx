@@ -44,7 +44,7 @@ const RichTextInput = forwardRef<RichTextInputRef, RichTextInputProps>(
       onBlur,
       value,
       defaultValue,
-      editable,
+      editable = true,
       autoFocus,
       ...props
     },

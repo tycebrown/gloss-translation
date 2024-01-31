@@ -8,9 +8,8 @@ import { Icon } from '../../shared/components/Icon';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
 import RichTextInput from '../../shared/components/form/RichTextInput';
 import RichText from '../../shared/components/RichText';
-import { useRef, useState } from 'react';
 import { useAccessControl } from '../../shared/accessControl';
-import Button from '../../shared/components/actions/Button';
+import { useDebouncedChangeHandler } from '../../shared/hooks/useDebouncedChangeHandler';
 
 type TranslationSidebarProps = {
   language: string;
@@ -141,7 +140,7 @@ function NotesView({
   const note = notesQuery.isSuccess ? notesQuery.data.data[word.id] : undefined;
   const updateNotesMutation = useMutation({
     mutationFn: async (variables: { wordId: string; content: string }) =>
-      apiClient.words.updateTranslatorNotes({
+      apiClient.words.updateTranslatorNote({
         wordId: variables.wordId,
         language,
         content: variables.content,
@@ -150,17 +149,16 @@ function NotesView({
       notesQuery.refetch();
     },
   });
-  const usersQuery = useQuery({
-    queryKey: ['users'],
-    queryFn: () => apiClient.users.findAll(),
-  });
   const userCan = useAccessControl();
-  const isLanguageUser = userCan('translate', {
+  const canEdit = userCan('translate', {
     type: 'Language',
     id: language,
   });
-  const notesInputRef = useRef<HTMLInputElement>(null);
-  const [isEditing, setIsEditing] = useState(false);
+
+  const debouncedSave = useDebouncedChangeHandler<string>(
+    (value) => updateNotesMutation.mutate({ wordId: word.id, content: value }),
+    1000
+  );
 
   return (
     <>
@@ -170,84 +168,37 @@ function NotesView({
           <LoadingSpinner />
         </div>
       )}
-      {notesQuery.isSuccess && usersQuery.isSuccess && (
+      {note && (
         <>
-          {!isEditing && (
-            <>
-              <RichText content={note?.content ?? ''} />
-              {isLanguageUser && (
-                <Button
-                  className="mt-4"
-                  onClick={() => setIsEditing(true)}
-                  disabled={
-                    notesQuery.isFetching || updateNotesMutation.isLoading
+          <div className="mb-1 text-sm italic">
+            {updateNotesMutation.isLoading ? (
+              <>Saving...</>
+            ) : (
+              t('translate:last_edited', {
+                timestamp: new Date(note.lastEditedAt).toLocaleDateString(
+                  i18n.language,
+                  {
+                    hour12: true,
+                    hour: 'numeric',
+                    minute: 'numeric',
+                    month: 'numeric',
+                    day: 'numeric',
+                    year: 'numeric',
                   }
-                >
-                  <Icon icon="edit" /> {t('common:edit')}
-                </Button>
-              )}
-            </>
-          )}
-          {isEditing && (
-            <>
-              <div className="mb-1 text-sm italic">
-                {note &&
-                  t('translate:last_edited', {
-                    timestamp: new Date(note.lastEditedAt).toLocaleDateString(
-                      i18n.language,
-                      {
-                        hour12: true,
-                        hour: 'numeric',
-                        minute: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                      }
-                    ),
-                    author:
-                      usersQuery.data.data.find(
-                        ({ id }) => id === note.lastAuthorId
-                      )?.name ?? 'Unknown',
-                  })}
-              </div>
-              <RichTextInput
-                ref={notesInputRef}
-                value={note?.content ?? ''}
-                name="translatorNotes"
-                editable={
-                  !notesQuery.isFetching && !updateNotesMutation.isLoading
-                }
-                autoFocus
-              />
-              <div className="flex flex-row justify-end gap-4 mt-2">
-                <Button
-                  variant="tertiary"
-                  onClick={() => setIsEditing(false)}
-                  disabled={updateNotesMutation.isLoading}
-                >
-                  {t('common:cancel')}
-                </Button>
-                <Button
-                  onClick={() => {
-                    console.log(notesInputRef.current?.value);
-                    updateNotesMutation.mutate({
-                      wordId: word.id,
-                      content: notesInputRef.current?.value ?? '',
-                    });
-                    setIsEditing(false);
-                  }}
-                  disabled={updateNotesMutation.isLoading}
-                >
-                  {updateNotesMutation.isLoading ? (
-                    <LoadingSpinner />
-                  ) : (
-                    <>
-                      <Icon icon="save" /> {t('common:save')}
-                    </>
-                  )}
-                </Button>
-              </div>
-            </>
+                ),
+                author: note.lastAuthor?.name ?? 'Unknown',
+              })
+            )}
+          </div>
+          {!canEdit && <RichText content={note?.content ?? ''} />}
+          {canEdit && (
+            <RichTextInput
+              value={note?.content ?? ''}
+              name="translatorNotes"
+              onChange={debouncedSave}
+              onBlur={() => console.log('oh no blurring!!!!!!!')}
+              autoFocus
+            />
           )}
         </>
       )}

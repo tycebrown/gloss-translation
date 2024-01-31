@@ -23,7 +23,7 @@ export default class Verses {
     });
   }
 
-  async updateTranslatorNotes({
+  async updateTranslatorNote({
     wordId,
     language,
     ...body

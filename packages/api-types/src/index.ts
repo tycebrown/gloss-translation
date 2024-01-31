@@ -213,7 +213,7 @@ export interface TranslatorNote {
   wordId: string;
   content: string;
   lastEditedAt: Date;
-  lastAuthorId: string;
+  lastAuthor: { id: string; name: string | null };
 }
 export interface GetVerseNotesResponseBody {
   data: { [wordId: string]: TranslatorNote };

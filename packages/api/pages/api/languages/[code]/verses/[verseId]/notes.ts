@@ -8,7 +8,6 @@ import { client } from '../../../../../../shared/db';
 export default createRoute<{ code: string; verseId: string }>()
   .get<void, GetVerseNotesResponseBody>({
     async handler(req, res) {
-      console.log('notes query...');
       const language = await client.language.findUnique({
         where: {
           code: req.query.code,
@@ -21,14 +20,16 @@ export default createRoute<{ code: string; verseId: string }>()
       }
 
       const responseData: { [wordId: string]: TranslatorNote } = {};
-      const databaseNotes = await client.translatorNotes.findMany({
+      const databaseNotes = await client.translatorNote.findMany({
         where: {
           wordId: { startsWith: req.query.verseId },
           languageId: language.id,
         },
+        include: {
+          lastAuthor: true,
+        },
       });
       databaseNotes.forEach((note) => (responseData[note.wordId] = note));
-      console.log('packed up yer notes!');
       res.ok({
         data: responseData,
       });

@@ -34,7 +34,7 @@ export default createRoute<{ code: string; wordId: string }>()
       const lastAuthorId = req.session.user.id;
       const lastEditedAt = new Date();
 
-      await client.translatorNotes.upsert({
+      await client.translatorNote.upsert({
         where: {
           wordId_languageId: {
             wordId: req.query.wordId,
