@@ -58,14 +58,16 @@ export interface PostInviteRequestBody {
   password: string;
 }
 
+export interface User {
+  id: string;
+  name?: string;
+  email?: string;
+  systemRoles?: SystemRole[];
+  emailStatus?: EmailStatus;
+}
+
 export interface GetUsersResponseBody {
-  data: {
-    id: string;
-    name?: string;
-    email?: string;
-    systemRoles?: SystemRole[];
-    emailStatus?: EmailStatus;
-  }[];
+  data: User[];
 }
 
 export interface PostUserRequestBody {
@@ -211,7 +213,7 @@ export interface GetLemmaResourcesResponseBody {
 
 export interface CommentThread {
   id: string;
-  authorId: string;
+  author: User;
   body: string;
   timestamp: Date;
   resolved: boolean;
@@ -220,7 +222,7 @@ export interface CommentThread {
 
 export interface CommentReply {
   id: string;
-  authorId: string;
+  author: User;
   body: string;
   timestamp: Date;
 }
@@ -230,6 +232,5 @@ export interface GetWordCommentsResponseBody {
 }
 
 export interface PostCommentRequestBody {
-  authorId: string;
   body: string;
 }

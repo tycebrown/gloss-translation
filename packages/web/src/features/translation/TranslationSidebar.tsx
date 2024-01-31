@@ -9,7 +9,6 @@ import { useCallback, useRef, useState } from 'react';
 import Button from '../../shared/components/actions/Button';
 import RichTextInput from '../../shared/components/form/RichTextInput';
 import RichText from '../../shared/components/RichText';
-import useAuth from '../../shared/hooks/useAuth';
 import { Tab } from '@headlessui/react';
 
 type TranslationSidebarProps = {
@@ -121,7 +120,6 @@ interface CommentsViewProps {
 }
 
 function CommentsView({ language, word }: CommentsViewProps) {
-  const { user } = useAuth();
   const { t } = useTranslation();
 
   const queryClient = useQueryClient();
@@ -137,9 +135,8 @@ function CommentsView({ language, word }: CommentsViewProps) {
           wordId: word.id,
           language,
           body,
-          authorId: user?.id ?? '',
         }),
-      [word, language, user]
+      [word, language]
     ),
     onSuccess: () =>
       queryClient.invalidateQueries(['word-comments', language, word.id]),
@@ -219,7 +216,6 @@ function CommentThreadView({
   comment: CommentThread;
 }) {
   const { t, i18n } = useTranslation();
-  const { user } = useAuth();
 
   const queryClient = useQueryClient();
   const usersQuery = useQuery(['users'], () => apiClient.users.findAll());
@@ -230,10 +226,9 @@ function CommentThreadView({
           language,
           wordId: word.id,
           commentId: comment.id,
-          authorId: user?.id ?? '',
           body,
         }),
-      [word, language, comment, user]
+      [word, language, comment]
     ),
     onSuccess: () =>
       queryClient.invalidateQueries(['word-comments', language, word.id]),
@@ -259,7 +254,7 @@ function CommentThreadView({
             </button>
             {usersQuery.isLoading && <LoadingSpinner className="inline" />}
             {usersQuery.isSuccess &&
-              usersQuery.data.data.find(({ id }) => id === comment.authorId)
+              usersQuery.data.data.find(({ id }) => id === comment.author.id)
                 ?.name}
           </div>
           <div className="text-sm">
@@ -304,7 +299,7 @@ function CommentThreadView({
                     )}
                     {usersQuery.isSuccess &&
                       usersQuery.data.data.find(
-                        ({ id }) => id === reply.authorId
+                        ({ id }) => id === reply.author.id
                       )?.name}
                   </div>
                   <div className="text-sm">

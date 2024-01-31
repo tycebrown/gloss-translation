@@ -36,6 +36,7 @@ export default createRoute<{ code: string; wordId: string }>()
             wordId: req.query.wordId,
             languageId: language.id,
           },
+          include: { author: true },
         }),
       };
 
@@ -60,11 +61,15 @@ export default createRoute<{ code: string; wordId: string }>()
         res.notFound();
         return;
       }
+      if (!req.session || !req.session.user) {
+        res.unauthorized();
+        return;
+      }
 
       await client.commentThread.create({
         data: {
           body: req.body.body,
-          authorId: req.body.authorId,
+          authorId: req.session.user.id,
           languageId: language.id,
           wordId: req.query.wordId,
         },
