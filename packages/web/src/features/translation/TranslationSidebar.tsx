@@ -217,13 +217,14 @@ function NotesView({
               <LoadingSpinner />
             </div>
           )}
-          {translatorNote &&
+          {translatorNotesQuery.isSuccess &&
             (canEdit ? (
               <>
                 <div className="mb-1 text-sm italic">
                   {updateTranslatorNoteMutation.isLoading ? (
                     <>{t('translate:saving')}...</>
                   ) : (
+                    translatorNote &&
                     t('translate:last_edited', {
                       timestamp: new Date(
                         translatorNote.lastEditedAt
