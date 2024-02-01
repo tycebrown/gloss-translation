@@ -1,6 +1,7 @@
 import type {
-  UpdateNotesRequestBody,
+  UpdateTranslatorNoteRequestBody,
   PatchWordGlossRequestBody,
+  UpdateFootnoteRequestBody,
 } from '@translation/api-types';
 import ApiClient from './client';
 
@@ -27,9 +28,20 @@ export default class Verses {
     wordId,
     language,
     ...body
-  }: { wordId: string; language: string } & UpdateNotesRequestBody) {
+  }: { wordId: string; language: string } & UpdateTranslatorNoteRequestBody) {
     await this.client.patch({
-      path: `/api/languages/${language}/words/${wordId}/note`,
+      path: `/api/languages/${language}/words/${wordId}/translator-note`,
+      body,
+    });
+  }
+
+  async updateFootnote({
+    wordId,
+    language,
+    ...body
+  }: { wordId: string; language: string } & UpdateFootnoteRequestBody) {
+    await this.client.patch({
+      path: `/api/languages/${language}/words/${wordId}/footnote`,
       body,
     });
   }

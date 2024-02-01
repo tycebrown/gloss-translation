@@ -215,10 +215,25 @@ export interface TranslatorNote {
   lastEditedAt: Date;
   lastAuthor: { id: string; name: string | null };
 }
-export interface GetVerseNotesResponseBody {
+
+export interface GetVerseTranslatorNotesResponseBody {
   data: { [wordId: string]: TranslatorNote };
 }
 
-export interface UpdateNotesRequestBody {
+export interface UpdateTranslatorNoteRequestBody {
+  content: string;
+}
+export interface Footnote {
+  wordId: string;
+  content: string;
+  lastEditedAt: Date;
+  lastAuthor: { id: string; name: string | null };
+}
+
+export interface GetVerseFootnotesResponseBody {
+  data: { [wordId: string]: Footnote };
+}
+
+export interface UpdateFootnoteRequestBody {
   content: string;
 }

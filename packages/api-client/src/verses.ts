@@ -2,7 +2,8 @@ import type {
   GetVerseGlossesResponseBody,
   GetVerseResponseBody,
   GetLemmaResourcesResponseBody,
-  GetVerseNotesResponseBody,
+  GetVerseTranslatorNotesResponseBody,
+  GetVerseFootnotesResponseBody,
 } from '@translation/api-types';
 import ApiClient from './client';
 
@@ -36,9 +37,21 @@ export default class Verses {
   }: {
     verseId: string;
     language: string;
-  }): Promise<GetVerseNotesResponseBody> {
+  }): Promise<GetVerseTranslatorNotesResponseBody> {
     return this.client.get({
-      path: `/api/languages/${language}/verses/${verseId}/notes`,
+      path: `/api/languages/${language}/verses/${verseId}/translator-notes`,
+    });
+  }
+
+  findFootnotes({
+    verseId,
+    language,
+  }: {
+    verseId: string;
+    language: string;
+  }): Promise<GetVerseFootnotesResponseBody> {
+    return this.client.get({
+      path: `/api/languages/${language}/verses/${verseId}/footnotes`,
     });
   }
 }

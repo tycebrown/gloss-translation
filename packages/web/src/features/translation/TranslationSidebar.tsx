@@ -175,8 +175,8 @@ function NotesView({
         language,
       }),
   });
-  const footnote = translatorNotesQuery.isSuccess
-    ? translatorNotesQuery.data.data[word.id]
+  const footnote = footnotesQuery.isSuccess
+    ? footnotesQuery.data.data[word.id]
     : undefined;
   const updateFootnoteMutation = useMutation({
     mutationFn: async (variables: { wordId: string; content: string }) =>
@@ -191,7 +191,7 @@ function NotesView({
   });
   const debouncedSaveFootnote = useDebouncedChangeHandler<string>(
     (value) =>
-      updateTranslatorNoteMutation.mutate({ wordId: word.id, content: value }),
+      updateFootnoteMutation.mutate({ wordId: word.id, content: value }),
     1000
   );
 
@@ -242,7 +242,7 @@ function NotesView({
                 </div>
                 <RichTextInput
                   value={translatorNote?.content ?? ''}
-                  name="translatorNotes"
+                  name="translatorNote"
                   onChange={debouncedSaveTranslatorNote}
                   autoFocus
                 />
@@ -271,13 +271,14 @@ function NotesView({
               <LoadingSpinner />
             </div>
           )}
-          {footnote &&
+          {footnotesQuery.isSuccess &&
             (canEdit ? (
               <>
                 <div className="mb-1 text-sm italic">
                   {updateFootnoteMutation.isLoading ? (
                     <>{t('translate:saving')}...</>
                   ) : (
+                    footnote &&
                     t('translate:last_edited', {
                       timestamp: new Date(
                         footnote.lastEditedAt
@@ -295,7 +296,7 @@ function NotesView({
                 </div>
                 <RichTextInput
                   value={footnote?.content ?? ''}
-                  name="translatorNotes"
+                  name="footnote"
                   onChange={debouncedSaveFootnote}
                   autoFocus
                 />

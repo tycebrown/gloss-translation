@@ -1,11 +1,11 @@
-import { UpdateNotesRequestBody } from '@translation/api-types';
+import { UpdateTranslatorNoteRequestBody } from '@translation/api-types';
 import createRoute from '../../../../../../shared/Route';
 import { client } from '../../../../../../shared/db';
 import * as z from 'zod';
 import { authorize } from '../../../../../../shared/access-control/authorize';
 
 export default createRoute<{ code: string; wordId: string }>()
-  .patch<UpdateNotesRequestBody, void>({
+  .patch<UpdateTranslatorNoteRequestBody, void>({
     schema: z.object({
       content: z.string(),
     }),

@@ -42,6 +42,8 @@ model AuthUser {
   emailVerifications UserEmailVerification[]
   /// All the translator notes that this user was the last editor.
   translatorNotes    TranslatorNote[]
+  /// All the translator notes that this user was the last editor.
+  footnotes          Footnote[]
 
   @@map("User")
 }
@@ -160,6 +162,8 @@ model Word {
   machineGlosses MachineGloss[]
   /// The translator note attached to this word
   translatorNote TranslatorNote?
+  /// The footnote attached to this word
+  footnote       Footnote?
 }
 
 /// A form of a lemma. This are differentiated by grammatical forms, as well as suffixes and prefixes.
@@ -211,6 +215,8 @@ model Language {
   machineGlosses      MachineGloss[]
   /// The translator notes in the language.
   translatorNotes     TranslatorNote[]
+  /// The footnotes in the language.
+  footnotes           Footnote[]
   /// The list of roles for members of this language.
   roles               LanguageMemberRole[]
   /// The pending import job if any.
@@ -314,6 +320,28 @@ enum ResourceCode {
 
 /// The translator note attached to a word
 model TranslatorNote {
+  /// The content of this note.
+  content      String
+  /// The timestamp this note were last edited.
+  lastEditedAt DateTime
+  /// The word this note is attached to.
+  word         Word     @relation(fields: [wordId], references: [id])
+  /// The ID of the word this note is attached to.
+  wordId       String   @unique
+  /// The translation language of this note.
+  language     Language @relation(fields: [languageId], references: [id])
+  /// The ID of the translation language of this note.
+  languageId   String   @db.Uuid
+  /// The last author of this note
+  lastAuthor   AuthUser @relation(fields: [lastAuthorId], references: [id])
+  /// The ID of the last auhtor of this note.
+  lastAuthorId String   @db.Uuid
+
+  @@id([wordId, languageId])
+}
+
+/// The footnote attached to a word
+model Footnote {
   /// The content of this note.
   content      String
   /// The timestamp this note were last edited.

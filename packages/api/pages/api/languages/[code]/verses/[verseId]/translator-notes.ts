@@ -1,12 +1,12 @@
 import {
-  GetVerseNotesResponseBody,
+  GetVerseTranslatorNotesResponseBody,
   TranslatorNote,
 } from '@translation/api-types';
 import createRoute from '../../../../../../shared/Route';
 import { client } from '../../../../../../shared/db';
 
 export default createRoute<{ code: string; verseId: string }>()
-  .get<void, GetVerseNotesResponseBody>({
+  .get<void, GetVerseTranslatorNotesResponseBody>({
     async handler(req, res) {
       const language = await client.language.findUnique({
         where: {
