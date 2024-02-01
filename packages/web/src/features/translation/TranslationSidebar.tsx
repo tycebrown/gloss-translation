@@ -168,13 +168,14 @@ function NotesView({
           <LoadingSpinner />
         </div>
       )}
-      {note &&
+      {notesQuery.isSuccess &&
         (canEdit ? (
           <>
             <div className="mb-1 text-sm italic">
               {updateNotesMutation.isLoading ? (
                 <>{t('translate:saving')}...</>
               ) : (
+                note &&
                 t('translate:last_edited', {
                   timestamp: new Date(note.lastEditedAt).toLocaleDateString(
                     i18n.language,
@@ -187,7 +188,7 @@ function NotesView({
                       year: 'numeric',
                     }
                   ),
-                  author: note.lastAuthor?.name ?? 'Unknown',
+                  author: note.lastAuthor.name ?? 'Unknown',
                 })
               )}
             </div>
