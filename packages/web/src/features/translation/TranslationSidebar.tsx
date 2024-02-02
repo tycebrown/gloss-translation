@@ -241,7 +241,7 @@ function NotesView({
                   )}
                 </div>
                 <RichTextInput
-                  value={translatorNote?.content ?? ''}
+                  value={translatorNote?.content}
                   name="translatorNote"
                   onChange={debouncedSaveTranslatorNote}
                   autoFocus
@@ -295,7 +295,7 @@ function NotesView({
                   )}
                 </div>
                 <RichTextInput
-                  value={footnote?.content ?? ''}
+                  value={footnote?.content}
                   name="footnote"
                   onChange={debouncedSaveFootnote}
                   autoFocus
