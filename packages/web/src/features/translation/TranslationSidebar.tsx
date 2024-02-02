@@ -156,7 +156,11 @@ function NotesView({
   });
 
   const debouncedSave = useDebouncedChangeHandler<string>(
-    (value) => updateNotesMutation.mutate({ wordId: word.id, content: value }),
+    (value) =>
+      updateNotesMutation.mutate({
+        wordId: word.id,
+        content: value,
+      }),
     1000
   );
 
@@ -193,7 +197,7 @@ function NotesView({
               )}
             </div>
             <RichTextInput
-              value={note?.content ?? ''}
+              value={note?.content}
               name="translatorNotes"
               onChange={debouncedSave}
               autoFocus

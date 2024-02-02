@@ -38,16 +38,7 @@ export const extensions = [
 
 const RichTextInput = forwardRef<RichTextInputRef, RichTextInputProps>(
   (
-    {
-      name,
-      onChange,
-      onBlur,
-      value,
-      defaultValue,
-      editable = true,
-      autoFocus,
-      ...props
-    },
+    { name, onChange, onBlur, value, editable = true, autoFocus, ...props },
     ref
   ) => {
     const { t } = useTranslation(['common']);
@@ -61,12 +52,14 @@ const RichTextInput = forwardRef<RichTextInputRef, RichTextInputProps>(
           ...props,
         },
       },
-      content: value ?? defaultValue,
+      parseOptions: { preserveWhitespace: true },
+      content: value ?? '',
       editable: editable,
       onCreate({ editor }) {
         const input = hiddenInput.current;
         if (input) {
           input.value = editor.getHTML();
+          console.log(editor.getHTML());
         }
       },
       onUpdate({ editor }) {
@@ -100,10 +93,6 @@ const RichTextInput = forwardRef<RichTextInputRef, RichTextInputProps>(
       }),
       [editor]
     );
-
-    useEffect(() => {
-      editor?.commands.setContent(value ?? '', false);
-    }, [value, editor]);
 
     useEffect(() => {
       editor?.setOptions({ editable });
