@@ -40,10 +40,14 @@ paths:
     $ref: ./paths/translation/verse-glosses.yml
   /languages/{code}/verses/{verseId}/translator-notes:
     $ref: ./paths/translation/translator-notes.yml
+  /languages/{code}/verses/{verseId}/footnotes:
+    $ref: ./paths/translation/footnotes.yml
   /languages/{code}/words/{wordId}:
     $ref: ./paths/languages/language-words.yml
   /languages/{code}/words/{wordId}/translator-note:
     $ref: ./paths/translation/update-translator-note.yml
+  /languages/{code}/words/{wordId}/footnote:
+    $ref: ./paths/translation/update-footnote.yml
   /languages/{code}/members:
     $ref: ./paths/languages/language-members.yml
   /languages/{code}/members/{userId}:

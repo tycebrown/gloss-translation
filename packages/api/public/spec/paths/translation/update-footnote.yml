@@ -1,7 +1,7 @@
 patch:
   tags:
     - Languages
-  summary: Update the translator note on a word
+  summary: Update the footnote on a word
   parameters:
     - $ref: '../../schemas/parameters.yml#languageCode'
     - $ref: '../../schemas/parameters.yml#verseId'
@@ -14,7 +14,7 @@ patch:
           properties:
             content:
               type: string
-              description: The updated content of this translator note
+              description: The updated content of this footnote
               example: <p>Hello World!</p>
   responses:
     201:

@@ -1,7 +1,7 @@
 get:
   tags:
     - Languages
-  summary: Get the translator notes on a verse
+  summary: Get the footnotes on a verse
   parameters:
     - $ref: '../../schemas/parameters.yml#languageCode'
     - $ref: '../../schemas/parameters.yml#verseId'
@@ -20,14 +20,14 @@ get:
                   properties:
                     content:
                       type: string
-                      description: The content of this translator note
+                      description: The content of this footnote
                     lastEditedAt:
                       type: string
                       format: date
-                      description: A timestamp of when this translator note was last edited
+                      description: A timestamp of when this footnote was last edited
                     lastAuthorId:
                       type: string
-                      description: The unique ID of the last author of this translator note
+                      description: The unique ID of the last author of this footnote
                 example:
                   0100100101:
                     content: <p>Lorem ipsum dolor sit amet consectur</p>
