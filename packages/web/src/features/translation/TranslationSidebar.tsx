@@ -139,6 +139,7 @@ function NotesView({
   });
   const note = notesQuery.isSuccess ? notesQuery.data.data[word.id] : undefined;
   const updateNotesMutation = useMutation({
+    mutationKey: ['translator-note', language, word.id],
     mutationFn: async (variables: { wordId: string; content: string }) =>
       apiClient.words.updateTranslatorNote({
         wordId: variables.wordId,
@@ -155,14 +156,12 @@ function NotesView({
     id: language,
   });
 
-  const debouncedSave = useDebouncedChangeHandler<string>(
-    (value) =>
-      updateNotesMutation.mutate({
-        wordId: word.id,
-        content: value,
-      }),
-    1000
-  );
+  const debouncedSave = useDebouncedChangeHandler<string>((value) => {
+    updateNotesMutation.mutate({
+      wordId: word.id,
+      content: value,
+    });
+  }, 1000);
 
   return (
     <>
@@ -197,6 +196,7 @@ function NotesView({
               )}
             </div>
             <RichTextInput
+              key={word.id}
               value={note?.content}
               name="translatorNotes"
               onChange={debouncedSave}
