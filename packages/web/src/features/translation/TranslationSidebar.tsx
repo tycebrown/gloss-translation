@@ -10,6 +10,7 @@ import RichTextInput from '../../shared/components/form/RichTextInput';
 import RichText from '../../shared/components/RichText';
 import { useAccessControl } from '../../shared/accessControl';
 import { useDebouncedChangeHandler } from '../../shared/hooks/useDebouncedChangeHandler';
+import { useRef } from 'react';
 
 type TranslationSidebarProps = {
   language: string;
@@ -128,6 +129,11 @@ function NotesView({
   verse: Verse;
 }) {
   const { t, i18n } = useTranslation();
+  const userCan = useAccessControl();
+  const canEdit = userCan('translate', {
+    type: 'Language',
+    id: language,
+  });
 
   const notesQuery = useQuery({
     queryKey: ['translator-notes', language, verse.id],
@@ -138,8 +144,11 @@ function NotesView({
       }),
   });
   const note = notesQuery.isSuccess ? notesQuery.data.data[word.id] : undefined;
+  const wordBeingMutated = useRef(word.id);
   const updateNotesMutation = useMutation({
-    mutationKey: ['translator-note', language, word.id],
+    onMutate: async (variables) => {
+      wordBeingMutated.current = variables.wordId;
+    },
     mutationFn: async (variables: { wordId: string; content: string }) =>
       apiClient.words.updateTranslatorNote({
         wordId: variables.wordId,
@@ -150,12 +159,6 @@ function NotesView({
       notesQuery.refetch();
     },
   });
-  const userCan = useAccessControl();
-  const canEdit = userCan('translate', {
-    type: 'Language',
-    id: language,
-  });
-
   const debouncedSave = useDebouncedChangeHandler<string>((value) => {
     updateNotesMutation.mutate({
       wordId: word.id,
@@ -175,7 +178,8 @@ function NotesView({
         (canEdit ? (
           <>
             <div className="mb-1 text-sm italic">
-              {updateNotesMutation.isLoading ? (
+              {wordBeingMutated.current === word.id &&
+              updateNotesMutation.isLoading ? (
                 <>{t('translate:saving')}...</>
               ) : (
                 note &&
