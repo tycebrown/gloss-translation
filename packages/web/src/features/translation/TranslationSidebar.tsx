@@ -10,7 +10,7 @@ import RichTextInput from '../../shared/components/form/RichTextInput';
 import RichText from '../../shared/components/RichText';
 import { useAccessControl } from '../../shared/accessControl';
 import { useDebouncedChangeHandler } from '../../shared/hooks/useDebouncedChangeHandler';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 
 type TranslationSidebarProps = {
   language: string;
@@ -129,15 +129,14 @@ function NotesView({
   verse: Verse;
 }) {
   const { t, i18n } = useTranslation();
-
-  const [translatorNotesOpen, setTranslatorNotesOpen] = useState(false);
-  const [footnotesOpen, setFootnotesOpen] = useState(false);
-
   const userCan = useAccessControl();
   const canEdit = userCan('translate', {
     type: 'Language',
     id: language,
   });
+
+  const [translatorNotesOpen, setTranslatorNotesOpen] = useState(false);
+  const [footnotesOpen, setFootnotesOpen] = useState(false);
 
   const translatorNotesQuery = useQuery({
     queryKey: ['translator-notes', language, verse.id],
@@ -150,7 +149,10 @@ function NotesView({
   const translatorNote = translatorNotesQuery.isSuccess
     ? translatorNotesQuery.data.data[word.id]
     : undefined;
+  const translatorNoteWordIdRef = useRef(word.id);
   const updateTranslatorNoteMutation = useMutation({
+    onMutate: async (variables) =>
+      (translatorNoteWordIdRef.current = variables.wordId),
     mutationFn: async (variables: { wordId: string; content: string }) =>
       apiClient.words.updateTranslatorNote({
         wordId: variables.wordId,
@@ -168,7 +170,6 @@ function NotesView({
   );
 
   const footnotesQuery = useQuery({
-    queryKey: ['footnotes', language, verse.id],
     queryFn: () =>
       apiClient.verses.findFootnotes({
         verseId: verse.id,
@@ -178,7 +179,10 @@ function NotesView({
   const footnote = footnotesQuery.isSuccess
     ? footnotesQuery.data.data[word.id]
     : undefined;
+  const footnoteWordIdRef = useRef(word.id);
   const updateFootnoteMutation = useMutation({
+    onMutate: async (variables) =>
+      (footnoteWordIdRef.current = variables.wordId),
     mutationFn: async (variables: { wordId: string; content: string }) =>
       apiClient.words.updateFootnote({
         wordId: variables.wordId,
@@ -221,7 +225,8 @@ function NotesView({
             (canEdit ? (
               <>
                 <div className="mb-1 text-sm italic">
-                  {updateTranslatorNoteMutation.isLoading ? (
+                  {translatorNoteWordIdRef.current === word.id &&
+                  updateTranslatorNoteMutation.isLoading ? (
                     <>{t('translate:saving')}...</>
                   ) : (
                     translatorNote &&
@@ -241,6 +246,7 @@ function NotesView({
                   )}
                 </div>
                 <RichTextInput
+                  key={word.id}
                   value={translatorNote?.content}
                   name="translatorNote"
                   onChange={debouncedSaveTranslatorNote}
@@ -275,7 +281,8 @@ function NotesView({
             (canEdit ? (
               <>
                 <div className="mb-1 text-sm italic">
-                  {updateFootnoteMutation.isLoading ? (
+                  {footnoteWordIdRef.current === word.id &&
+                  updateFootnoteMutation.isLoading ? (
                     <>{t('translate:saving')}...</>
                   ) : (
                     footnote &&
@@ -295,6 +302,7 @@ function NotesView({
                   )}
                 </div>
                 <RichTextInput
+                  key={word.id}
                   value={footnote?.content}
                   name="footnote"
                   onChange={debouncedSaveFootnote}
