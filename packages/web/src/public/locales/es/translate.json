@@ -12,6 +12,6 @@
   "select_verse": "Seleccionar verso",
   "strongs": "Fuerte",
   "last_edited": "Última edición {{timestamp}}, por {{author}}",
-  "translator_notes": "Translator Notes",
-  "footnotes": "Footnotes"
+  "translator_notes": "Notas del traductor",
+  "footnotes": "Notas a pie de página"
 }

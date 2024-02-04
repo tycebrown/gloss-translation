@@ -289,7 +289,7 @@ function NotesView({
                 />
               </>
             ) : (
-              <RichText content={translatorNoteContent} />
+              <RichText content={translatorNote?.content ?? ''} />
             ))}
         </div>
       )}
@@ -349,7 +349,7 @@ function NotesView({
                 />
               </>
             ) : (
-              <RichText content={footnoteContent} />
+              <RichText content={footnote?.content ?? ''} />
             ))}
         </div>
       )}
