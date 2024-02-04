@@ -1,10 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { LanguageRole, TextDirection } from '@translation/api-types';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useLoaderData, useParams } from 'react-router-dom';
 import apiClient from '../../shared/apiClient';
+import bibleTranslationClient, {
+  BibleTranslation,
+} from '../../shared/bibleTranslationClient';
 import { Icon } from '../../shared/components/Icon';
 import {
   List,
@@ -19,23 +22,21 @@ import View from '../../shared/components/View';
 import ViewTitle from '../../shared/components/ViewTitle';
 import Button from '../../shared/components/actions/Button';
 import { Link } from '../../shared/components/actions/Link';
-import Form from '../../shared/components/form/Form';
-import FormLabel from '../../shared/components/form/FormLabel';
-import InputError from '../../shared/components/form/InputError';
-import MultiselectInput from '../../shared/components/form/MultiselectInput';
-import SubmittingIndicator from '../../shared/components/form/SubmittingIndicator';
-import TextInput from '../../shared/components/form/TextInput';
-import fontClient from '../../shared/fontClient';
-import { useFlash } from '../../shared/hooks/flash';
-import queryClient from '../../shared/queryClient';
-import bibleTranslationClient, {
-  BibleTranslation,
-} from '../../shared/bibleTranslationClient';
 import {
   ButtonSelectorInput,
   ButtonSelectorOption,
 } from '../../shared/components/form/ButtonSelectorInput';
 import ComboboxInput from '../../shared/components/form/ComboboxInput';
+import Form from '../../shared/components/form/Form';
+import FormLabel from '../../shared/components/form/FormLabel';
+import InputError from '../../shared/components/form/InputError';
+import MultiselectInput from '../../shared/components/form/MultiselectInput';
+import SortableMultiselectInput from '../../shared/components/form/SortableMultiselectInput';
+import SubmittingIndicator from '../../shared/components/form/SubmittingIndicator';
+import TextInput from '../../shared/components/form/TextInput';
+import fontClient from '../../shared/fontClient';
+import { useFlash } from '../../shared/hooks/flash';
+import queryClient from '../../shared/queryClient';
 
 const languageQueryKey = (code: string) => ({
   queryKey: ['language', code],
@@ -137,7 +138,14 @@ export default function ManageLanguageView() {
   const removeMemberMutation = useRemoveLanguageMemberMutation();
   const updateMemberMutation = useUpdateLanguageMemberMutation();
 
-  const formContext = useForm<FormData>();
+  const formContext = useForm<FormData>({
+    defaultValues: {
+      name: language.data.name,
+      font: language.data.font,
+      textDirection: language.data.textDirection,
+      bibleTranslationIds: language.data.bibleTranslationIds,
+    },
+  });
   async function onSubmit(data: FormData) {
     try {
       await apiClient.languages.update(language.data.code, {
@@ -151,8 +159,6 @@ export default function ManageLanguageView() {
       flash.error(`${error}`);
     }
   }
-
-  const [previewFont, setPreviewFont] = useState(language.data.font);
 
   return (
     <View fitToScreen className="flex justify-center items-start">
@@ -168,12 +174,12 @@ export default function ManageLanguageView() {
               {t('common:name').toUpperCase()}
             </FormLabel>
             <TextInput
+              {...formContext.register('name', {
+                required: true,
+              })}
               id="name"
-              name="name"
               className="w-full"
               autoComplete="off"
-              defaultValue={language.data.name}
-              required
               aria-describedby="name-error"
             />
             <InputError
@@ -186,14 +192,17 @@ export default function ManageLanguageView() {
             <FormLabel htmlFor="font">
               {t('languages:font').toUpperCase()}
             </FormLabel>
-            <ComboboxInput
-              id="font"
+            <Controller
               name="font"
-              className="w-full h-10"
-              required
-              defaultValue={previewFont}
-              items={fonts.map((font) => ({ label: font, value: font }))}
-              onChange={(font) => setPreviewFont(font)}
+              rules={{ required: true }}
+              render={({ field }) => (
+                <ComboboxInput
+                  {...field}
+                  id="font"
+                  className="w-full h-10"
+                  items={fonts.map((font) => ({ label: font, value: font }))}
+                />
+              )}
             />
           </div>
           <div className="mb-2">
@@ -201,30 +210,39 @@ export default function ManageLanguageView() {
               {t('languages:text_direction').toUpperCase()}
             </FormLabel>
             <div>
-              <ButtonSelectorInput
+              <Controller
                 name="textDirection"
-                aria-labelledby="text-direction-label"
-                defaultValue={language.data.textDirection}
-              >
-                <ButtonSelectorOption value={TextDirection.LTR}>
-                  {t('languages:ltr')}
-                </ButtonSelectorOption>
-                <ButtonSelectorOption value={TextDirection.RTL}>
-                  {t('languages:rtl')}
-                </ButtonSelectorOption>
-              </ButtonSelectorInput>
+                rules={{ required: true }}
+                render={({ field }) => (
+                  <ButtonSelectorInput
+                    {...field}
+                    aria-labelledby="text-direction-label"
+                  >
+                    <ButtonSelectorOption value={TextDirection.LTR}>
+                      {t('languages:ltr')}
+                    </ButtonSelectorOption>
+                    <ButtonSelectorOption value={TextDirection.RTL}>
+                      {t('languages:rtl')}
+                    </ButtonSelectorOption>
+                  </ButtonSelectorInput>
+                )}
+              />
             </div>
           </div>
           <div className="mb-2">
             <FormLabel htmlFor="bibleTranslationIds">
               {t('languages:bible_translations').toUpperCase()}
             </FormLabel>
-            <MultiselectInput
+            <Controller
               name="bibleTranslationIds"
-              className="w-full"
-              defaultValue={language.data.bibleTranslationIds}
-              items={translationOptions}
-              placeholder={t('languages:select_translations').toString()}
+              render={({ field }) => (
+                <SortableMultiselectInput
+                  {...field}
+                  className="w-full"
+                  items={translationOptions}
+                  placeholder={t('languages:select_translations').toString()}
+                />
+              )}
             />
           </div>
           <div>
