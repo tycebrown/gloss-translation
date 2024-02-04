@@ -183,8 +183,6 @@ export interface GetVerseGlossesResponseBody {
 export interface PatchWordGlossRequestBody {
   gloss?: string;
   state?: GlossState;
-  lastUpdatedAt?: string;
-  lastUpdatedById?: string;
 }
 
 export interface SNSConfirmSubscriptionMessage {

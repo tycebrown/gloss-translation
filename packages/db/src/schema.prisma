@@ -40,7 +40,8 @@ model AuthUser {
   languageRoles      LanguageMemberRole[]
   /// The list of emails awaiting verification.
   emailVerifications UserEmailVerification[]
-  Gloss              Gloss[]
+  // The list of glosses this user has last updated.
+  glosses            Gloss[]
 
   @@map("User")
 }
@@ -267,13 +268,13 @@ model Gloss {
   gloss           String?
   /// The approval state of the gloss.
   state           GlossState @default(UNAPPROVED)
-  /// The timestamp that this gloss was created
-  createdAt       DateTime   @default(now())
-  /// The timestamp that this gloss was last updated
-  lastUpdatedAt   DateTime   @default(now())
-  /// The user who last updated this gloss
+  /// The timestamp that this gloss was created.
+  createdAt       DateTime
+  /// The timestamp that this gloss was last updated.
+  lastUpdatedAt   DateTime
+  /// The user who last updated this gloss.
   lastUpdatedBy   AuthUser?  @relation(fields: [lastUpdatedById], references: [id])
-  /// The ID of the user who last updated this gloss
+  /// The ID of the user who last updated this gloss.
   lastUpdatedById String?    @db.Uuid
 
   @@id([wordId, languageId])

@@ -32,7 +32,6 @@ import {
 } from './verse-utils';
 import View from '../../shared/components/View';
 import { isFlagEnabled } from '../../shared/featureFlags';
-import useAuth from '../../shared/hooks/useAuth';
 
 export const translationLanguageKey = 'translation-language';
 export const translationVerseIdKey = 'translation-verse-id';
@@ -123,8 +122,6 @@ function useTranslationQueries(language: string, verseId: string) {
 }
 
 export default function TranslationView() {
-  const { user } = useAuth();
-
   const { t, i18n } = useTranslation(['common']);
   const { language, verseId } = useParams() as {
     language: string;
@@ -170,8 +167,6 @@ export default function TranslationView() {
         language,
         gloss: variables.gloss,
         state: variables.state,
-        lastUpdatedAt: new Date().toISOString(),
-        lastUpdatedById: user?.id,
       }),
     onMutate: async ({ wordId, gloss, state }) => {
       const requestId = Math.floor(Math.random() * 1000000);

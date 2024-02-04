@@ -31,11 +31,13 @@ export default createRoute<{ code: string; wordId: string }>()
         return;
       }
 
+      if (!req.session || !req.session.user) {
+        throw new Error('No user session');
+      }
+
       const fields: {
         gloss?: string;
         state?: PrismaTypes.GlossState;
-        lastUpdatedAt?: string;
-        lastUpdatedById?: string;
       } = {};
 
       if (typeof req.body.state !== 'undefined') {
@@ -49,14 +51,8 @@ export default createRoute<{ code: string; wordId: string }>()
           fields.state = GlossState.Unapproved;
         }
       }
-      if (typeof req.body.lastUpdatedAt !== 'undefined') {
-        fields.lastUpdatedAt = req.body.lastUpdatedAt;
-      }
-      if (typeof req.body.lastUpdatedById !== 'undefined') {
-        fields.lastUpdatedById = req.body.lastUpdatedById;
-      }
 
-      const now = new Date().toISOString();
+      const now = new Date();
 
       await client.gloss.upsert({
         where: {
@@ -65,12 +61,16 @@ export default createRoute<{ code: string; wordId: string }>()
             languageId: language.id,
           },
         },
-        update: fields,
+        update: {
+          ...fields,
+          lastUpdatedAt: now,
+          lastUpdatedById: req.session.user.id,
+        },
         create: {
           ...fields,
-          // the following two lines are so that createdAt and lastUpdatedAt are the same time for initial creation of the gloss
           createdAt: now,
           lastUpdatedAt: now,
+          lastUpdatedById: req.session.user.id,
           wordId: req.query.wordId,
           languageId: language.id,
         },
