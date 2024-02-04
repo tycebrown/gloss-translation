@@ -9,8 +9,8 @@ import LoadingSpinner from '../../shared/components/LoadingSpinner';
 import RichTextInput from '../../shared/components/form/RichTextInput';
 import RichText from '../../shared/components/RichText';
 import { useAccessControl } from '../../shared/accessControl';
-import { useDebouncedChangeHandler } from '../../shared/hooks/useDebouncedChangeHandler';
-import { useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { throttle } from 'lodash';
 
 type TranslationSidebarProps = {
   language: string;
@@ -159,12 +159,25 @@ function NotesView({
       notesQuery.refetch();
     },
   });
-  const debouncedSave = useDebouncedChangeHandler<string>((value) => {
-    updateNotesMutation.mutate({
-      wordId: word.id,
-      content: value,
-    });
-  }, 1000);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const throttledSave = useCallback(
+    throttle(
+      (value: string) => {
+        updateNotesMutation.mutate({
+          wordId: word.id,
+          content: value,
+        });
+      },
+      5000,
+      { leading: false, trailing: true }
+    ),
+    [word.id]
+  );
+
+  const [noteContent, setNoteContent] = useState(note?.content ?? '');
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => setNoteContent(note?.content ?? ''), [word.id]);
 
   return (
     <>
@@ -201,9 +214,13 @@ function NotesView({
             </div>
             <RichTextInput
               key={word.id}
-              value={note?.content}
+              value={noteContent}
               name="translatorNotes"
-              onChange={debouncedSave}
+              onChange={(value) => {
+                setNoteContent(value);
+                throttledSave(value);
+              }}
+              onBlur={throttledSave.flush}
               autoFocus
             />
           </>
