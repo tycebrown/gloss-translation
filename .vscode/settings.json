@@ -1,4 +1,3 @@
 {
-  "typescript.preferences.importModuleSpecifier": "project-relative",
-  "cSpell.words": ["datetime"]
+  "typescript.preferences.importModuleSpecifier": "project-relative"
 }

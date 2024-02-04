@@ -1,6 +1,6 @@
 -- AlterTable
-ALTER TABLE "Gloss" ADD COLUMN     "createdAt" TIMESTAMP(3) NOT NULL,
-ADD COLUMN     "lastUpdatedAt" TIMESTAMP(3) NOT NULL,
+ALTER TABLE "Gloss" ADD COLUMN     "createdAt" TIMESTAMP(3),
+ADD COLUMN     "lastUpdatedAt" TIMESTAMP(3),
 ADD COLUMN     "lastUpdatedById" UUID;
 
 -- AddForeignKey

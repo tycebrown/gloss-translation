@@ -269,9 +269,9 @@ model Gloss {
   /// The approval state of the gloss.
   state           GlossState @default(UNAPPROVED)
   /// The timestamp that this gloss was created.
-  createdAt       DateTime
+  createdAt       DateTime?
   /// The timestamp that this gloss was last updated.
-  lastUpdatedAt   DateTime
+  lastUpdatedAt   DateTime?
   /// The user who last updated this gloss.
   lastUpdatedBy   AuthUser?  @relation(fields: [lastUpdatedById], references: [id])
   /// The ID of the user who last updated this gloss.

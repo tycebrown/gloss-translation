@@ -11,8 +11,6 @@ export default createRoute<{ code: string; wordId: string }>()
       state: z
         .enum(Object.values(GlossState) as [GlossState, ...GlossState[]])
         .optional(),
-      lastUpdatedAt: z.string().datetime().optional(),
-      lastUpdatedById: z.string().optional(),
     }),
     authorize: authorize((req) => ({
       action: 'translate',
