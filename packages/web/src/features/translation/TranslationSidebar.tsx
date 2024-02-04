@@ -9,8 +9,8 @@ import LoadingSpinner from '../../shared/components/LoadingSpinner';
 import RichTextInput from '../../shared/components/form/RichTextInput';
 import RichText from '../../shared/components/RichText';
 import { useAccessControl } from '../../shared/accessControl';
-import { useDebouncedChangeHandler } from '../../shared/hooks/useDebouncedChangeHandler';
-import { useState, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { throttle } from 'lodash';
 
 type TranslationSidebarProps = {
   language: string;
@@ -163,10 +163,19 @@ function NotesView({
       translatorNotesQuery.refetch();
     },
   });
-  const debouncedSaveTranslatorNote = useDebouncedChangeHandler<string>(
-    (value) =>
-      updateTranslatorNoteMutation.mutate({ wordId: word.id, content: value }),
-    1000
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const throttledSaveTranslatorNote = useCallback(
+    throttle(
+      (value: string) => {
+        updateTranslatorNoteMutation.mutate({
+          wordId: word.id,
+          content: value,
+        });
+      },
+      5000,
+      { leading: false, trailing: true }
+    ),
+    [word.id]
   );
 
   const footnotesQuery = useQuery({
@@ -193,11 +202,33 @@ function NotesView({
       footnotesQuery.refetch();
     },
   });
-  const debouncedSaveFootnote = useDebouncedChangeHandler<string>(
-    (value) =>
-      updateFootnoteMutation.mutate({ wordId: word.id, content: value }),
-    1000
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const throttledSaveFootnote = useCallback(
+    throttle(
+      (value: string) => {
+        updateFootnoteMutation.mutate({
+          wordId: word.id,
+          content: value,
+        });
+      },
+      5000,
+      { leading: false, trailing: true }
+    ),
+    [word.id]
   );
+
+  const [translatorNoteContent, setTranslatorNoteContent] = useState(
+    translatorNote?.content ?? ''
+  );
+  const [footnoteContent, setFootnoteContent] = useState(
+    footnote?.content ?? ''
+  );
+
+  useEffect(() => {
+    setTranslatorNoteContent(translatorNote?.content ?? '');
+    setFootnoteContent(footnote?.content ?? '');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [word.id]);
 
   return (
     <>
@@ -247,14 +278,18 @@ function NotesView({
                 </div>
                 <RichTextInput
                   key={word.id}
-                  value={translatorNote?.content}
+                  value={translatorNoteContent}
                   name="translatorNote"
-                  onChange={debouncedSaveTranslatorNote}
+                  onChange={(value) => {
+                    setFootnoteContent(value);
+                    throttledSaveTranslatorNote(value);
+                  }}
+                  onBlur={throttledSaveTranslatorNote.flush}
                   autoFocus
                 />
               </>
             ) : (
-              <RichText content={translatorNote?.content ?? ''} />
+              <RichText content={translatorNoteContent} />
             ))}
         </div>
       )}
@@ -303,14 +338,18 @@ function NotesView({
                 </div>
                 <RichTextInput
                   key={word.id}
-                  value={footnote?.content}
+                  value={footnoteContent}
                   name="footnote"
-                  onChange={debouncedSaveFootnote}
+                  onChange={(value) => {
+                    setFootnoteContent(value);
+                    throttledSaveFootnote(value);
+                  }}
+                  onBlur={throttledSaveFootnote.flush}
                   autoFocus
                 />
               </>
             ) : (
-              <RichText content={footnote?.content ?? ''} />
+              <RichText content={footnoteContent} />
             ))}
         </div>
       )}
