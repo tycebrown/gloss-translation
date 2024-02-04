@@ -11,5 +11,7 @@
   "saving": "guardando",
   "select_verse": "Seleccionar verso",
   "strongs": "Fuerte",
-  "last_edited": "Última edición {{timestamp}}, por {{author}}"
+  "last_edited": "Última edición {{timestamp}}, por {{author}}",
+  "translator_notes": "Translator Notes",
+  "footnotes": "Footnotes"
 }

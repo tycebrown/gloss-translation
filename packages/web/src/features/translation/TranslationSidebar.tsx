@@ -212,7 +212,7 @@ function NotesView({
             className={!translatorNotesOpen ? 'rtl:rotate-180' : ''}
           />
         </button>{' '}
-        Translator Notes
+        {t('translate:translator_notes')}
       </div>
       {translatorNotesOpen && (
         <div className="mb-2.5 ms-4">
@@ -268,7 +268,7 @@ function NotesView({
             className={!footnotesOpen ? 'rtl:rotate-180' : ''}
           />
         </button>{' '}
-        Footnotes
+        {t('translate:footnotes')}
       </div>
       {footnotesOpen && (
         <div className="mb-2.5 ms-4">

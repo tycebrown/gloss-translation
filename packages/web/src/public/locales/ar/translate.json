@@ -11,5 +11,7 @@
   "saving": "جاري الحفظ",
   "select_verse": "حدد الآية",
   "strongs": "أقوياء",
-  "last_edited": "آخر تعديل {{timestamp}}، بواسطة {{author}}"
+  "last_edited": "آخر تعديل {{timestamp}}، بواسطة {{author}}",
+  "translator_notes": "ملاحظات المترجم",
+  "footnotes": "الحواشي"
 }

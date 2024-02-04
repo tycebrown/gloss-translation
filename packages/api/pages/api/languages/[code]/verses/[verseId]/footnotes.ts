@@ -1,7 +1,4 @@
-import {
-  GetVerseFootnotesResponseBody,
-  TranslatorNote,
-} from '@translation/api-types';
+import { GetVerseFootnotesResponseBody } from '@translation/api-types';
 import createRoute from '../../../../../../shared/Route';
 import { client } from '../../../../../../shared/db';
 
@@ -19,7 +16,6 @@ export default createRoute<{ code: string; verseId: string }>()
         return;
       }
 
-      const responseData: { [wordId: string]: TranslatorNote } = {};
       const databaseNotes = await client.footnote.findMany({
         where: {
           wordId: { startsWith: req.query.verseId },
@@ -29,9 +25,11 @@ export default createRoute<{ code: string; verseId: string }>()
           lastAuthor: true,
         },
       });
-      databaseNotes.forEach((note) => (responseData[note.wordId] = note));
+
       res.ok({
-        data: responseData,
+        data: Object.fromEntries(
+          databaseNotes.map((note) => [note.wordId, note])
+        ),
       });
     },
   })
