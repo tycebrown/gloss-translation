@@ -1,13 +1,7 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { Icon } from '../Icon';
-import {
-  ComponentProps,
-  forwardRef,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-} from 'react';
+import { ComponentProps, forwardRef, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 export interface RichTextInputProps {
@@ -68,7 +62,6 @@ const RichTextInput = forwardRef<RichTextInputRef, RichTextInputProps>(
         const input = hiddenInput.current;
         if (input) {
           input.value = editor.getHTML();
-          console.log(editor.getHTML());
         }
       },
       onUpdate({ editor }) {
@@ -86,22 +79,6 @@ const RichTextInput = forwardRef<RichTextInputRef, RichTextInputProps>(
         }
       },
     });
-
-    useImperativeHandle(
-      ref,
-      () => ({
-        get value() {
-          return hiddenInput.current?.value ?? '';
-        },
-        set value(newValue: string | undefined) {
-          if (hiddenInput.current) hiddenInput.current.value = newValue ?? '';
-        },
-        focus() {
-          editor?.commands.focus();
-        },
-      }),
-      [editor]
-    );
 
     useEffect(() => {
       if (value !== editor?.getHTML())
