@@ -37,7 +37,6 @@ import fontClient from '../../shared/fontClient';
 import { useFlash } from '../../shared/hooks/flash';
 import queryClient from '../../shared/queryClient';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
-import { bookKeys } from 'data/book-keys';
 import { bookName } from '../translation/verse-utils';
 
 const languageQueryKey = (code: string) => ({
@@ -340,29 +339,32 @@ function TranslationProgressView() {
   return (
     <div>
       <hr className="mt-5" />
-      <div className="mt-2 text-xl font-bold mb-1.5">Translation Progress:</div>
+      <div className="mt-2 mb-5 text-xl font-bold">Translation Progress:</div>
       {glossPercentagesQuery.isLoading && (
         <div className="flex flex-row justify-center">
           <LoadingSpinner />
         </div>
       )}
       {glossPercentagesQuery.isSuccess && (
-        <div>
-          <ul>
+        <div className="text-lg ms-4">
+          <ul className="flex flex-col gap-5">
             {Object.entries(
-              glossPercentagesQuery.data.data.versesGlossedPercentageByBook
+              glossPercentagesQuery.data.data.versesGlossedPercentagePerBook
             ).map(([bookId, versesGlossedPercentage]) => (
-              <li key={bookId}>
-                {bookName(+bookId, t)}: {(+versesGlossedPercentage).toFixed(2)}%
+              <li key={bookId} className="flex flex-row justify-between">
+                <div>{bookName(+bookId, t).toLocaleUpperCase()}:</div>
+                {(+versesGlossedPercentage).toFixed(2).padStart(5, '0')}%
               </li>
             ))}
           </ul>
-          <div>
-            TOTAL:{' '}
-            {(+glossPercentagesQuery.data.data.versesGlossedPercentage).toFixed(
-              2
-            )}
-            %
+          <div className="flex flex-row justify-between mt-6 font-bold">
+            <div>TOTAL: </div>
+            <div>
+              {(+glossPercentagesQuery.data.data.versesGlossedPercentage)
+                .toFixed(2)
+                .padStart(5, '0')}
+              %
+            </div>
           </div>
         </div>
       )}
