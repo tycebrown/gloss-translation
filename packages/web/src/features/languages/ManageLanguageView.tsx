@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { LanguageRole, TextDirection } from '@translation/api-types';
-import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useLoaderData, useParams } from 'react-router-dom';
@@ -37,6 +36,9 @@ import TextInput from '../../shared/components/form/TextInput';
 import fontClient from '../../shared/fontClient';
 import { useFlash } from '../../shared/hooks/flash';
 import queryClient from '../../shared/queryClient';
+import LoadingSpinner from '../../shared/components/LoadingSpinner';
+import { bookKeys } from 'data/book-keys';
+import { bookName } from '../translation/verse-utils';
 
 const languageQueryKey = (code: string) => ({
   queryKey: ['language', code],
@@ -161,8 +163,8 @@ export default function ManageLanguageView() {
   }
 
   return (
-    <View fitToScreen className="flex justify-center items-start">
-      <div className="mx-4 flex-shrink">
+    <View fitToScreen className="flex items-start justify-center">
+      <div className="flex-shrink mx-4">
         <ViewTitle className="flex">
           <span>{language.data.name}</span>
           <span className="mx-2">-</span>
@@ -321,7 +323,49 @@ export default function ManageLanguageView() {
             {t('languages:import_glosses')}
           </Link>
         </div>
+        <TranslationProgressView />
       </div>
     </View>
+  );
+}
+
+function TranslationProgressView() {
+  const { t } = useTranslation();
+  const params = useParams() as { code: string };
+  const glossPercentagesQuery = useQuery({
+    queryKey: ['gloss-percentages', params.code],
+    queryFn: () => apiClient.languages.getGlossPercentages(params.code),
+  });
+
+  return (
+    <div>
+      <hr className="mt-5" />
+      <div className="mt-2 text-xl font-bold mb-1.5">Translation Progress:</div>
+      {glossPercentagesQuery.isLoading && (
+        <div className="flex flex-row justify-center">
+          <LoadingSpinner />
+        </div>
+      )}
+      {glossPercentagesQuery.isSuccess && (
+        <div>
+          <ul>
+            {Object.entries(
+              glossPercentagesQuery.data.data.versesGlossedPercentageByBook
+            ).map(([bookId, versesGlossedPercentage]) => (
+              <li key={bookId}>
+                {bookName(+bookId, t)}: {(+versesGlossedPercentage).toFixed(2)}%
+              </li>
+            ))}
+          </ul>
+          <div>
+            TOTAL:{' '}
+            {(+glossPercentagesQuery.data.data.versesGlossedPercentage).toFixed(
+              2
+            )}
+            %
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

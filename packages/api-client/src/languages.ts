@@ -1,4 +1,5 @@
 import {
+  GetGlossPercentagesResponseBody,
   GetLanguageImportResponseBody,
   type GetLanguageMembersResponseBody,
   type GetLanguageResponseBody,
@@ -100,6 +101,12 @@ export default class Languages {
   async removeMember(code: string, userId: string): Promise<void> {
     await this.client.delete({
       path: `/api/languages/${code}/members/${userId}`,
+    });
+  }
+
+  getGlossPercentages(code: string): Promise<GetGlossPercentagesResponseBody> {
+    return this.client.get({
+      path: `/api/languages/${code}/gloss-percentages`,
     });
   }
 }

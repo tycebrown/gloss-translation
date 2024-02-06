@@ -1,15 +1,10 @@
 import { client } from '../../../../shared/db';
 import createRoute from '../../../../shared/Route';
 import { authorize } from '../../../../shared/access-control/authorize';
+import { GetGlossPercentagesResponseBody } from '@translation/api-types';
 
 export default createRoute<{ code: string }>()
-  .get<
-    void,
-    {
-      versesGlossedPercentage: number;
-      versesGlossedPercentageByBook: { [bookId: number]: number };
-    }
-  >({
+  .get<void, GetGlossPercentagesResponseBody>({
     authorize: authorize((req) => ({
       action: 'read',
       subject: 'Language',
@@ -75,7 +70,7 @@ export default createRoute<{ code: string }>()
                     verse_gloss_counts."COUNT" = verse_word_counts."COUNT"
             )
             SELECT
-            (
+            ((
                 SELECT
                     COUNT(*) 
                 FROM
@@ -83,7 +78,7 @@ export default createRoute<{ code: string }>()
                     SELECT
                         COUNT(*) 
                     FROM
-                        "Verse") * 100 AS "glossedVersesPercentage"`;
+                        "Verse") * 100)::DECIMAL AS "glossedVersesPercentage"`;
 
       const rawGlossedVersesPerBookPercentageData = await client.$queryRaw<
         { bookId: number; glossedVersesPercentage: number }[]
@@ -165,7 +160,7 @@ export default createRoute<{ code: string }>()
             )
             SELECT
                 verses_count_by_book."bookId" AS "bookId",
-                COALESCE(glossed_verses_count_by_book."COUNT", 0)::DECIMAL / verses_count_by_book."COUNT" * 100 AS "glossedVersesPercentage" 
+                (COALESCE(glossed_verses_count_by_book."COUNT", 0)::DECIMAL / verses_count_by_book."COUNT" * 100)::DECIMAL AS "glossedVersesPercentage" 
             FROM
                 glossed_verses_count_by_book 
                 RIGHT JOIN
@@ -173,17 +168,28 @@ export default createRoute<{ code: string }>()
                     ON glossed_verses_count_by_book."bookId" = verses_count_by_book."bookId" 
             ORDER BY
                 verses_count_by_book."bookId"`;
+
+      console.log(
+        'rawGlossedVersesPercentageData:',
+        JSON.stringify(rawGlossedVersesPercentageData, undefined, 2)
+      );
+      console.log(
+        'rawGlossedVersesPerBookPercentageData:',
+        JSON.stringify(rawGlossedVersesPerBookPercentageData, undefined, 2)
+      );
       res.ok({
-        versesGlossedPercentage:
-          rawGlossedVersesPercentageData[0].glossedVersesPercentage,
-        versesGlossedPercentageByBook: Object.fromEntries(
-          rawGlossedVersesPerBookPercentageData.map(
-            ({ bookId, glossedVersesPercentage }) => [
-              bookId,
-              glossedVersesPercentage,
-            ]
-          )
-        ),
+        data: {
+          versesGlossedPercentage:
+            rawGlossedVersesPercentageData[0].glossedVersesPercentage,
+          versesGlossedPercentageByBook: Object.fromEntries(
+            rawGlossedVersesPerBookPercentageData.map(
+              ({ bookId, glossedVersesPercentage }) => [
+                bookId,
+                glossedVersesPercentage,
+              ]
+            )
+          ),
+        },
       });
     },
   })
