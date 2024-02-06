@@ -17,7 +17,7 @@ export default function Footer() {
   }, []);
 
   return (
-    <footer className="p-2 flex flex-row z-10 justify-end">
+    <footer className="sticky bottom-0 z-10 flex flex-row justify-end p-2 end-0">
       <button
         type="button"
         onClick={() => {
