@@ -17,6 +17,7 @@
   "next": "Siguiente",
   "not_found": "No Encontrado",
   "not_found_message": "No pudimos encontrar lo que estás buscando.",
+  "remove": "Eliminar",
   "rich_text": {
     "bold_tooltip": "Negrita (Ctrl+B)",
     "italic_tooltip": "Cursiva (Ctrl+I)",
@@ -29,6 +30,7 @@
   "submitting": "Sumisión",
   "success": "Éxito",
   "too_many_options": "Demasiadas opciones para mostrar. Por favor, filtre más.",
+  "total": "Total",
   "try_again": "Intentar de Nuevo",
   "unknown_error": "Error Desconocido",
   "unknown_error_message": "Ha ocurrido un error desconocido.",

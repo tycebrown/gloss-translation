@@ -309,7 +309,7 @@ export default function ManageLanguageView() {
                       })
                     }
                   >
-                    Remove
+                    {t('common:remove')}
                   </Button>
                 </ListCell>
               </ListRow>
@@ -339,7 +339,9 @@ function TranslationProgressView() {
   return (
     <div>
       <hr className="mt-5" />
-      <div className="mt-2 mb-5 text-xl font-bold">Translation Progress:</div>
+      <div className="mt-2 mb-5 text-xl font-bold">
+        {t('translate:translation_progress')}:
+      </div>
       {glossPercentagesQuery.isLoading && (
         <div className="flex flex-row justify-center">
           <LoadingSpinner />
@@ -358,7 +360,7 @@ function TranslationProgressView() {
             ))}
           </ul>
           <div className="flex flex-row justify-between mt-6 font-bold">
-            <div>TOTAL: </div>
+            <div>{t('common:total').toLocaleUpperCase()}: </div>
             <div>
               {(+glossPercentagesQuery.data.data.versesGlossedPercentage)
                 .toFixed(2)
