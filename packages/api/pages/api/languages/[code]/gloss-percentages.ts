@@ -27,7 +27,6 @@ export default createRoute<{ code: string }>()
             SELECT (SELECT COUNT(*) FROM glossed_verses)::decimal/(SELECT COUNT(*) FROM "Verse") * 100.0 AS "versesGlossedPercentage"`) as [
         { versesGlossedPercentage: number }
       ];
-
       const versesGlossedPerBookPercentageData = (await client.$queryRaw`
             -- Verses glossed percentage by book
             WITH 
@@ -46,8 +45,7 @@ export default createRoute<{ code: string }>()
                 glossed_verses_per_book AS (SELECT glossed_verses."bookId", COUNT(*) "count" FROM glossed_verses GROUP BY glossed_verses."bookId"),
                 verses_per_book AS (SELECT "Verse"."bookId", COUNT(*) "count" FROM "Verse" GROUP BY "Verse"."bookId")
             SELECT verses_per_book."bookId", COALESCE(glossed_verses_per_book."count", 0)::decimal/verses_per_book."count" * 100.0 AS "versesGlossedPercentage" FROM glossed_verses_per_book 
-                RIGHT JOIN verses_per_book ON glossed_verses_per_book."bookId" = verses_per_book."bookId" ORDER BY verses_per_book."bookId"
-	`) as {
+                RIGHT JOIN verses_per_book ON glossed_verses_per_book."bookId" = verses_per_book."bookId" ORDER BY verses_per_book."bookId"`) as {
         bookId: number;
         versesGlossedPercentage: number;
       }[];

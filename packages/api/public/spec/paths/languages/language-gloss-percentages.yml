@@ -1,0 +1,28 @@
+get:
+  tags:
+    - Languages
+  summary: Get the gloss percentages of a language
+  responses:
+    '200':
+      description: Ok
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  versesGlossedPercentage:
+                    description: Percentage of verses glossed in this language
+                    example: 12.9
+                    type: number
+                  versesGlossedPercentagePerBook:
+                    description: Percentage of verses glossed per book in this language. Keys are book ids (numbers)
+                    type: object
+                    additionalProperties:
+                      type: number
+                    example:
+                      0: 9.3
+                      1: 14.7
+                      '[rest of book ids]': ...
