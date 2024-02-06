@@ -163,7 +163,7 @@ export default function ManageLanguageView() {
   }
 
   return (
-    <View fitToScreen className="flex items-start justify-center">
+    <View className="flex items-start justify-center w-full h-full">
       <div className="flex-shrink mx-4">
         <ViewTitle className="flex">
           <span>{language.data.name}</span>
