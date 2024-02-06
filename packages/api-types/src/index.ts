@@ -212,7 +212,7 @@ export interface GetLemmaResourcesResponseBody {
 export interface GetGlossPercentagesResponseBody {
   data: {
     versesGlossedPercentage: number;
-    versesGlossedPercentageByBook: {
+    versesGlossedPercentagePerBook: {
       [bookId: number]: number;
     };
   };
